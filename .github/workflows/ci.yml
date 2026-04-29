@@ -11,11 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "yarn"
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
+
       - name: Build
-        run: npm run build
+        run: yarn build
