@@ -1,1 +1,30 @@
 @import "tailwindcss";
+@import "./assets/fonts/switzer.css";
+@import "./assets/fonts/clash-display.css";
+
+@theme {
+  --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "ClashDisplay", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --color-primary: #ff6a00;
+  --color-light: #ffffff;
+  --color-dark: #2f2f2f;
+  --color-error: #de3a3a;
+  --color-body-light: rgba(255, 255, 255, 0.95);
+  --color-body-dark: rgba(47, 47, 47, 0.95);
+  --color-gradient-auth: 45deg, rgba(47, 47, 47, 1) 12%, rgba(47, 47, 47, 0.8) 100%;
+
+  --shadow-sm: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+
+html {
+  background: var(--color-dark);
+}
+
+body {
+  background: var(--color-body-light);
+  font-family: "Switzer", sans-serif;
+  color: var(--color-dark);
+}
