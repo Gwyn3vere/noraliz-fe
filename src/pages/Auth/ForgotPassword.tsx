@@ -5,7 +5,7 @@ import Form from "./Form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleX } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import AuthSwitch from "./AuthSwitch";
 
 const version = import.meta.env.VITE_REACT_APP_VERSION;
@@ -14,7 +14,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (email === "") {
