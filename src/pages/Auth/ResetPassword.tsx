@@ -5,7 +5,7 @@ import Form from "./Form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CircleX } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { EyeSlashIcon, EyeIcon } from "@phosphor-icons/react";
 import { useSearchParams } from "react-router-dom";
 import BadRequest from "@/pages/Errors/BadRequest";
@@ -25,7 +25,7 @@ export default function ResetPassword() {
     return <BadRequest />;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (password === "" || passwordConfirm === "") {

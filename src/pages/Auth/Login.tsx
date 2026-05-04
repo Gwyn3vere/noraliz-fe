@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EyeSlashIcon, EyeIcon } from "@phosphor-icons/react";
 import { CircleX } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import OAuthSection from "./OAuthSection";
 import AuthSwitch from "./AuthSwitch";
 
@@ -20,7 +20,7 @@ export default function Login() {
   const [errors, setErrors] = useState("");
   const [isShowPassword, setIsShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (email === "" || password === "") {
