@@ -7,23 +7,25 @@ import { Button } from "@/components/ui/button";
 import { CircleX } from "lucide-react";
 import React, { useState } from "react";
 import AuthSwitch from "./AuthSwitch";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
+import { useForgotPassword } from "@/components/hooks/useForgotPassword";
 
 const version = import.meta.env.VITE_REACT_APP_VERSION;
 
 export default function ForgotPassword() {
+  const { sendResetLink, isLoading, error, message, clearError } = useForgotPassword();
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState("");
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (email === "") {
-      setErrors("Email cannot empty!");
-    } else {
-      console.log("post data success");
-    }
-
-    return;
+    if (!email) return;
+    sendResetLink(email);
   };
 
   return (
@@ -45,17 +47,19 @@ export default function ForgotPassword() {
           footer={<AuthSwitch type="forgot" />}
         >
           <Input type="Email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+          {/* Message popup */}
+          {message && <div className={styles.formSuccess}>{message}</div>}
           {/* Errors popup */}
-          {errors !== "" && (
+          {error && (
             <div className={styles.formErrors}>
-              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={() => setErrors("")}>
+              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={clearError}>
                 <CircleX size={17} strokeWidth={3} />
               </Button>{" "}
-              {errors}
+              {error}
             </div>
           )}
           <Button form="form" type="submit" className={styles.formBtn}>
-            Send
+            {isLoading ? "Sending" : "Send"}
           </Button>
         </Form>
       </div>

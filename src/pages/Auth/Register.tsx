@@ -9,26 +9,28 @@ import { CircleX } from "lucide-react";
 import React, { useState } from "react";
 import OAuthSection from "./OAuthSection";
 import AuthSwitch from "./AuthSwitch";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
+import { useRegister } from "@/components/hooks/useRegister";
 
 const version = import.meta.env.VITE_REACT_APP_VERSION;
 
 export default function Register() {
+  const { register, isLoading, error, clearError } = useRegister();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [errors, setErrors] = useState("");
+  const [fullName, setPfullName] = useState("");
   const [isShowPassword, setIsShowPassword] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (email === "" || password === "" || passwordConfirm === "") {
-      setErrors("Email or password cannot empty!");
-    } else {
-      console.log("post data success");
-    }
-
-    return;
+    if (!email || !password || !fullName) return;
+    register(email, password, fullName);
   };
 
   return (
@@ -70,32 +72,18 @@ export default function Register() {
               {!isShowPassword ? <EyeSlashIcon size={17} weight="bold" /> : <EyeIcon size={17} weight="bold" />}
             </Button>
           </div>
-          <div className="relative">
-            <Input
-              type={isShowPassword ? "text" : "password"}
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="Password confirm"
-            />
-            <Button
-              type="button"
-              className="absolute top-1/2 translate-y-[-50%] right-0"
-              onClick={() => setIsShowPassword((prev) => !prev)}
-            >
-              {!isShowPassword ? <EyeSlashIcon size={17} weight="bold" /> : <EyeIcon size={17} weight="bold" />}
-            </Button>
-          </div>
+          <Input type="Text" value={fullName} onChange={(e) => setPfullName(e.target.value)} placeholder="Full name" />
           {/* Errors popup */}
-          {errors !== "" && (
+          {error && (
             <div className={styles.formErrors}>
-              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={() => setErrors("")}>
+              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={clearError}>
                 <CircleX size={17} strokeWidth={3} />
               </Button>{" "}
-              {errors}
+              {error}
             </div>
           )}
           <Button type="submit" className={styles.formBtn}>
-            Sign Up
+            {isLoading ? "Verifying" : "Sign Up"}
           </Button>
         </Form>
       </div>

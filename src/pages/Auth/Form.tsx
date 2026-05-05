@@ -8,8 +8,8 @@ type FormProps = {
   children: React.ReactNode;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 
-  footer?: React.ReactNode; // 👈 custom phần dưới
-  oauth?: React.ReactNode; // 👈 custom OAuth
+  footer?: React.ReactNode;
+  oauth?: React.ReactNode;
 };
 
 function Form({ title, subTitle, children, onSubmit, footer, oauth }: FormProps) {
@@ -17,7 +17,7 @@ function Form({ title, subTitle, children, onSubmit, footer, oauth }: FormProps)
     <div className="flex flex-col items-center justify-center h-[calc(100%-90px)]">
       {/* Header */}
       <div className="flex flex-col items-center leading-[1.2]">
-        <span className="text-[40px] font-black italic text-[var(--color-primary)]">{title}</span>
+        <span className="text-[40px] text-center font-black italic text-[var(--color-primary)]">{title}</span>
         {subTitle && <div className="text-[14px] text-center max-w-[235px]">{subTitle}</div>}
       </div>
       {/* Form */}

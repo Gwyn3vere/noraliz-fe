@@ -20,8 +20,9 @@ const formBody = "gap-[15px] my-[22px] flex flex-col items-center";
 const formSubmitBtn =
   "bg-[var(--color-primary)] !w-[300px] !h-[45px] !rounded-[10px] text-white font-bold cursor-pointer";
 const formErrors = "bg-[var(--color-error)] rounded-[10px] py-1 px-2 w-[300px]";
-const formErrorsFlex = "flex items-center gap-2";
-const formErrorsText = "text-[14px] font-semibold text-white";
+const formSuccess = "bg-[var(--color-success)] rounded-[10px] py-1 px-2 w-[300px]";
+const formFlex = "flex gap-2";
+const formText = "text-[14px] font-semibold text-white";
 
 // languages
 const languagesFlex = "flex items-center justify-between";
@@ -46,7 +47,8 @@ export const authStyles = {
   version: cn(versionStyle, versionFlex),
   form: cn(formContainer),
   formComp: cn(formBody),
-  formErrors: cn(formErrors, formErrorsFlex, formErrorsText),
+  formErrors: cn(formErrors, formFlex, formText),
+  formSuccess: cn(formSuccess, formFlex, formText),
   formBtn: cn(formSubmitBtn),
   languages: cn(languagesFlex),
   icon: cn(languageIcon),

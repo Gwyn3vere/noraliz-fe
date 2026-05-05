@@ -12,6 +12,7 @@
   --color-light: #ffffff;
   --color-dark: #2f2f2f;
   --color-error: #de3a3a;
+  --color-success: #4285f4;
   --color-body-light: rgba(255, 255, 255, 0.95);
   --color-body-dark: rgba(47, 47, 47, 0.95);
   --color-gradient-auth: 45deg, rgba(47, 47, 47, 1) 12%, rgba(47, 47, 47, 0.8) 100%;
