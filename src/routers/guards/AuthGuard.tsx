@@ -1,14 +1,13 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 
 export function AuthGuard() {
-  // Tạm thời kiểm tra localStorage (sau này sẽ dùng Zustand store)
-  const isAuthenticated = localStorage.getItem("accessToken") !== null;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    // Chưa đăng nhập → redirect về login
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
-  // Đã đăng nhập → render các route con
   return <Outlet />;
 }

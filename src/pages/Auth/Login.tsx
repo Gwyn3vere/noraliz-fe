@@ -4,32 +4,34 @@ import Languages from "./Languages";
 import Form from "./Form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EyeSlashIcon, EyeIcon } from "@phosphor-icons/react";
 import { CircleX } from "lucide-react";
 import React, { useState } from "react";
 import OAuthSection from "./OAuthSection";
 import AuthSwitch from "./AuthSwitch";
+import { useLogin } from "@/components/hooks/useLogin";
+import { useAuthStore } from "@/stores/authStore";
 
 const version = import.meta.env.VITE_REACT_APP_VERSION;
 
 export default function Login() {
+  const { login, isLoading, error, clearError } = useLogin();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState("");
   const [isShowPassword, setIsShowPassword] = useState(false);
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (email === "" || password === "") {
-      setErrors("Email or password cannot empty!");
-    } else {
-      console.log("post data success");
-    }
-
-    return;
+    if (!email || !password) return;
+    login(email, password);
   };
 
   return (
@@ -72,12 +74,12 @@ export default function Login() {
             </Button>
           </div>
           {/* Errors popup */}
-          {errors !== "" && (
+          {error && (
             <div className={styles.formErrors}>
-              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={() => setErrors("")}>
+              <Button type="button" className="w-auto h-auto !p-0 cursor-pointer" onClick={clearError}>
                 <CircleX size={17} strokeWidth={3} />
               </Button>{" "}
-              {errors}
+              {error}
             </div>
           )}
           <div className="flex items-center justify-between text-[12px] w-[300px]">
@@ -92,7 +94,7 @@ export default function Login() {
             </Link>
           </div>
           <Button form="form" type="submit" className={styles.formBtn}>
-            Sign In
+            {isLoading ? "Authenticating" : "Sign In"}
           </Button>
         </Form>
       </div>

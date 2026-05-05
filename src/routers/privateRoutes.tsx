@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
+import DashboardLayout from "@/components/layouts/DashboardLayout";
 
 const Builder = lazy(() => import("../pages/Builder/Builder"));
+const Dashboard = lazy(() => import("@/pages/Dashboard/Dashboard"));
 
 function PageLoading() {
   return (
@@ -26,5 +28,18 @@ export const privateRoutes: RouteObject[] = [
         <Builder />
       </LazyPage>
     ),
+  },
+  {
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: (
+          <LazyPage>
+            <Dashboard />
+          </LazyPage>
+        ),
+      },
+    ],
   },
 ];
