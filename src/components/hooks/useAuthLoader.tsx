@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { refreshTokenApi } from "@/services/authApi";
 import { useAuthStore } from "@/stores/authStore";
-import { getCookie } from "@/utils/cookie";
+// import { getCookie } from "@/utils/cookie";
 
 export function useAuthLoader() {
   const { setAuth, clearAuth, isAuthenticated } = useAuthStore();
@@ -13,11 +13,11 @@ export function useAuthLoader() {
       return;
     }
 
-    const hasRefreshToken = getCookie("refreshToken");
-    if (!hasRefreshToken) {
-      setIsReady(true);
-      return;
-    }
+    // const hasRefreshToken = getCookie("refreshToken");
+    // if (!hasRefreshToken) {
+    //   setIsReady(true);
+    //   return;
+    // }
 
     const initAuth = async () => {
       try {

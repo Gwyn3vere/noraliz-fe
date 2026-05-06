@@ -11,7 +11,7 @@ export default function OAuthSection({ mode }: { mode: "login" | "register" }) {
       </div>
 
       <div className={styles.googleButton}>
-        <img src={images.goggleIcon} className={styles.googleIcon} />
+        <img src={images.googleIcon} className={styles.googleIcon} />
         <span className={styles.googleTextStyle}>{mode === "login" ? "Sign in" : "Sign up"} with Google</span>
       </div>
     </div>
