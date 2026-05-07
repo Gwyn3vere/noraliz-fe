@@ -22,8 +22,8 @@ export function useAuthLoader() {
     const initAuth = async () => {
       try {
         const data = await refreshTokenApi();
-        if (data.accessToken) {
-          setAuth(data.user || { id: "", email: "", fullName: "" }, data.accessToken);
+        if (data?.accessToken) {
+          setAuth(data?.user, data?.accessToken);
         }
       } catch (error: any) {
         if (error.response?.status !== 401) {

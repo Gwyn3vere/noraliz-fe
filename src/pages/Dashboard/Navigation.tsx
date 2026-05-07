@@ -1,6 +1,6 @@
 import classNames from "classnames/bind";
 import { dashboardStyles as styles } from "./Dashboard.styles";
-import type { TabMenuType } from "@/types/tabTypes";
+import type { TabMenuType } from "@/types";
 import { TAB_MENU } from "@/constants/tabMenu";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
@@ -36,13 +36,13 @@ export default function Navigation({ tab, onChangeTab }: Props) {
           );
         })}
       </div>
-      <div className="relative">
+      <div className="relative block md:hidden">
         <MagnifyingGlassIcon
           size={17}
           weight="bold"
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[var(--color-dark)]/40"
         />
-        <Input type="search" placeholder=" Search..." className="pl-9 my-2 w-full block md:hidden" />
+        <Input type="search" placeholder=" Search..." className="pl-9 my-2 w-full" />
       </div>
     </nav>
   );

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_REACT_APP_API_HOST || import.meta.env.VITE_REACT_APP_API_BASE;
+const API_BASE = import.meta.env.VITE_REACT_APP_API_BASE;
 
 const authApi = axios.create({
   baseURL: API_BASE,
