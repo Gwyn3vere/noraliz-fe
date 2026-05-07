@@ -27,7 +27,7 @@ const emptyLayout = "flex flex-col items-center justify-center gap-5";
 const emptyTextLayout = "flex flex-col items-center";
 const emptyTextBase = "text-md md:text-[20px] font-medium text-center";
 
-const emptyButtonBase = "text-white bg-[var(--color-primary)] !rounded-[10px] cursor-pointer";
+const emptyButtonBase = "text-xs text-white bg-[var(--color-primary)] !rounded-[10px] cursor-pointer";
 
 // content
 const contentSpace = "mt-[160px]";

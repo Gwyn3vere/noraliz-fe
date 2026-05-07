@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 // import { dashboardStyles as styles } from "./Dashboard.styles";
 import Navigation from "./Navigation";
 import { useState } from "react";
