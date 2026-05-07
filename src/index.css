@@ -18,6 +18,7 @@
   --color-gradient-auth: 45deg, rgba(47, 47, 47, 1) 12%, rgba(47, 47, 47, 0.8) 100%;
 
   --shadow-sm: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  --shadow-xs: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }
 
 html {
