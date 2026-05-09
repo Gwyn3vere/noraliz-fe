@@ -4,13 +4,25 @@ import EmptySpace from "./EmptySpace";
 import { images } from "@/assets/images";
 import { Button } from "@/components/ui/button";
 import { CirclePlus, Ellipsis, Clock, Info } from "lucide-react";
-import { mockProjects } from "@/data/project";
 import type { ProjectSummary } from "@/types";
 import { formatEditedTime } from "@/utils/format";
 import Control from "./Control";
+import { useProjects } from "@/components/hooks/useProjects";
 
 export default function Projects() {
-  return mockProjects.length === 0 ? (
+  const { projects, isLoading, error, createNewProject } = useProjects();
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-red-500">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
+
+  return projects.length === 0 ? (
     <EmptySpace
       icon={images.emptyProjects}
       title="Ready to build?"
@@ -34,8 +46,8 @@ export default function Projects() {
           }
         />
       </div>
-      <div className="grid gap-5 w-full grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-        {mockProjects.map((project) => (
+      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        {projects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </div>

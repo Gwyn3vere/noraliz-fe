@@ -35,7 +35,7 @@ const contentSpace = "mt-[160px]";
 
 // card
 const cardBase = "bg-[var(--color-light)] rounded-[30px] shadow-[var(--shadow-xs)]";
-const cardSize = "w-full h-auto";
+const cardSize = "w-auto h-auto";
 
 const cardThumbBase = "bg-[var(--color-dark)]/15 rounded-[30px] border-5 md:border-10 border-white";
 const cardThumbSize = "w-full h-[280px]";

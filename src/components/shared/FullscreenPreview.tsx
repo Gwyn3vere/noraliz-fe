@@ -64,7 +64,7 @@ export function FullscreenPreview({ src, alt = "Preview", onClose }: FullscreenP
       </div>
 
       {/* Ảnh */}
-      <img src={src} alt={alt} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+      <img src={src} alt={alt} className="max-w-[90vw] max-h-[90vh] object-contain rounded-[30px] shadow-2xl" />
     </div>,
     document.body,
   );

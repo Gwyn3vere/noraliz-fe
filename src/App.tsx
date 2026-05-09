@@ -6,7 +6,7 @@ function AppRoutes() {
   return useRoutes(routes);
 }
 
-function App() {
+function AppContent() {
   const isReady = useAuthLoader();
 
   if (!isReady) {
@@ -17,9 +17,13 @@ function App() {
     );
   }
 
+  return <AppRoutes />;
+}
+
+function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <AppContent />
     </BrowserRouter>
   );
 }
