@@ -25,7 +25,14 @@ export default function Projects() {
   ) : (
     <div className={styles.contentContainer}>
       <div className="pt-[40px] pb-[20px] md:py-[40px]">
-        <Control />
+        <Control
+          button={
+            <Button className={styles.emptyButton}>
+              <CirclePlus strokeWidth={3} />
+              Create new project
+            </Button>
+          }
+        />
       </div>
       <div className="grid gap-5 w-full grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
         {mockProjects.map((project) => (
@@ -44,9 +51,9 @@ const ProjectCard = memo(function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className={styles.cardContainer}>
       <div className={styles.cardThumb} />
-      <div className="space-y-2 px-2.5">
+      <div className="px-2.5">
         <div className=" flex items-center justify-between">
-          <div className="text-[20px] font-bold truncate">{project.name}</div>
+          <div className="text-[20px] font-bold truncate mb-2">{project.name}</div>
           <Button className="w-[30px] h-[30px] bg-[var(--color-dark)]/10 !rounded-[10px]">
             <Ellipsis size={24} strokeWidth={3} />
           </Button>
@@ -57,11 +64,6 @@ const ProjectCard = memo(function ProjectCard({ project }: ProjectCardProps) {
             <Clock size={15} strokeWidth={3} />
             {formatEditedTime(project.updatedAt)}
           </div>
-
-          {/* <div className="flex items-center gap-2">
-            <Book size={15} strokeWidth={3} />
-            Pages: {project.pageCount}
-          </div> */}
 
           <div className="flex items-center gap-2 truncate">
             <Info size={15} strokeWidth={3} />

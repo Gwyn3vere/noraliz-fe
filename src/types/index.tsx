@@ -19,3 +19,15 @@ export interface ProjectSummary {
   pageCount: number;
   isPublic: boolean;
 }
+
+export interface AssetSummary {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
+
+  name?: string;
+  sizeFormatted?: string;
+}
