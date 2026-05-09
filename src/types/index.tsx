@@ -31,3 +31,9 @@ export interface AssetSummary {
   name?: string;
   sizeFormatted?: string;
 }
+
+export interface UserSummary {
+  id: string;
+  email: string;
+  fullName: string;
+}

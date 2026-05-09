@@ -1,23 +1,21 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { refreshTokenApi } from "@/services/authApi";
 import { useAuthStore } from "@/stores/authStore";
-// import { getCookie } from "@/utils/cookie";
+
+const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 export function useAuthLoader() {
-  const { setAuth, clearAuth, isAuthenticated } = useAuthStore();
+  const { setAuth, isAuthenticated } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Nếu đang ở trang auth, không cần kiểm tra
+    if (isAuthenticated || AUTH_PATHS.includes(location.pathname)) {
       setIsReady(true);
       return;
     }
-
-    // const hasRefreshToken = getCookie("refreshToken");
-    // if (!hasRefreshToken) {
-    //   setIsReady(true);
-    //   return;
-    // }
 
     const initAuth = async () => {
       try {
@@ -25,10 +23,8 @@ export function useAuthLoader() {
         if (data?.accessToken) {
           setAuth(data?.user, data?.accessToken);
         }
-      } catch (error: any) {
-        if (error.response?.status !== 401) {
-          clearAuth();
-        }
+      } catch {
+        // Lỗi 401 được bỏ qua – interceptor đã xử lý
       } finally {
         setIsReady(true);
       }

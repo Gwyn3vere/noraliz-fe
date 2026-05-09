@@ -1,0 +1,46 @@
+import { useState, useEffect, useCallback } from "react";
+import { fetchProjects, createProject, deleteProject } from "@/services/projectApi";
+import type { ProjectSummary } from "@/types";
+
+interface UseProjectsReturn {
+  projects: ProjectSummary[];
+  isLoading: boolean;
+  error: string | null;
+  createNewProject: (name: string, description?: string) => Promise<void>;
+  removeProject: (id: string) => Promise<void>;
+}
+
+export function useProjects(): UseProjectsReturn {
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadProjects = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchProjects();
+      setProjects(data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to load projects.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
+
+  const createNewProject = async (name: string, description?: string) => {
+    const newProject = await createProject(name, description);
+    setProjects((prev) => [newProject, ...prev]);
+  };
+
+  const removeProject = async (id: string) => {
+    await deleteProject(id);
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  return { projects, isLoading, error, createNewProject, removeProject };
+}

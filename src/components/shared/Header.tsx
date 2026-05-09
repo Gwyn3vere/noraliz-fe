@@ -3,6 +3,7 @@ import { sharedStyles as styles } from "./Shared.styles";
 import { ChevronDown, Bell } from "lucide-react";
 import { images } from "@/assets/images";
 import classnames from "classnames/bind";
+import { useCurrentUser } from "@/components/hooks/useCurrentUser";
 
 const cx = classnames.bind(styles);
 
@@ -17,6 +18,7 @@ type DropdownType = (typeof DROPDOWN)[keyof typeof DROPDOWN] | null;
 export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { user, isLoading } = useCurrentUser();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,8 +61,8 @@ export default function Header() {
             <img src={images.avatar} alt="avatar" />
           </div>
           <div className="hidden md:flex flex-col justify-center select-none">
-            <span className="text-[15px] font-bold leading-none">Phuc Tang</span>
-            <p className="text-[12px]">test@example.com</p>
+            <span className="text-[15px] font-bold leading-none">{isLoading ? "..." : user?.fullName || "User"}</span>
+            <p className="text-[12px]">{isLoading ? "..." : user?.email || ""}</p>
           </div>
           <ChevronDown
             size={15}
