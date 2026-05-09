@@ -10,7 +10,7 @@ import Control from "./Control";
 import { useProjects } from "@/components/hooks/useProjects";
 
 export default function Projects() {
-  const { projects, isLoading, error, createNewProject } = useProjects();
+  const { projects, error } = useProjects();
 
   // Error state
   if (error) {
