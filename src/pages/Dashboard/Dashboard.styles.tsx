@@ -27,7 +27,8 @@ const emptyLayout = "flex flex-col items-center justify-center gap-5";
 const emptyTextLayout = "flex flex-col items-center";
 const emptyTextBase = "text-md md:text-[20px] font-medium text-center";
 
-const emptyButtonBase = "text-xs text-white bg-[var(--color-primary)] !rounded-[10px] cursor-pointer";
+const emptyButtonBase =
+  "text-white text-[13px] md:text-[15px] bg-[var(--color-primary)] !rounded-[10px] cursor-pointer";
 
 // content
 const contentSpace = "mt-[160px]";
@@ -36,8 +37,24 @@ const contentSpace = "mt-[160px]";
 const cardBase = "bg-[var(--color-light)] rounded-[30px] shadow-[var(--shadow-xs)]";
 const cardSize = "w-full h-auto";
 
-const cardThumbBase = "bg-[var(--color-dark)]/15 rounded-[30px] border-10 border-white";
+const cardThumbBase = "bg-[var(--color-dark)]/15 rounded-[30px] border-5 md:border-10 border-white";
 const cardThumbSize = "w-full h-[280px]";
+
+// asset
+const assetBase = "bg-[var(--color-light)] shadow-[var(--shadow-sm)] rounded-[30px] overflow-hidden";
+const assetPosition = "relative";
+
+const assetHover = "bg-[var(--color-dark)]/40 opacity-0 group-hover:opacity-100 cursor-pointer";
+
+// img
+const imgBase = "border-5 md:border-10 border-[var(--color-light)] !rounded-[30px]";
+const imgSize = "w-[130px] h-[130px] lg:w-[200px] lg:h-[200px]";
+const imgLayout = "flex items-center justify-center";
+
+const imgCopy = "bg-[var(--color-dark)]/40 cursor-pointer text-white";
+const imgTrans = "transition-all duration-300";
+
+const imgLoading = "absolute inset-0";
 
 export const dashboardStyles = {
   navContainer: cn(navBase, navPosition, navSize, navSpace, navLayout),
@@ -53,4 +70,11 @@ export const dashboardStyles = {
 
   cardContainer: cn(cardBase, cardSize),
   cardThumb: cn(cardThumbBase, cardThumbSize),
+
+  assetContainer: cn(assetBase, assetPosition),
+  assetCopy: cn(imgCopy, imgLoading, imgBase, imgLayout, imgTrans),
+  assetSee: cn("!text-xl", assetHover, imgSize, imgBase, imgLoading, imgTrans),
+
+  images: cn(imgBase, imgSize, imgLayout),
+  loading: cn(imgLoading),
 };
