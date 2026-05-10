@@ -34,10 +34,10 @@ const emptyButtonBase =
 const contentSpace = "mt-[160px]";
 
 // card
-const cardBase = "bg-[var(--color-light)] rounded-[30px] shadow-[var(--shadow-xs)]";
+const cardBase = "bg-[var(--color-light)] rounded-[20px] shadow-[var(--shadow-xs)]";
 const cardSize = "w-auto h-auto";
 
-const cardThumbBase = "bg-[var(--color-dark)]/15 rounded-[30px] border-5 md:border-10 border-white";
+const cardThumbBase = "bg-[var(--color-dark)]/5 rounded-[20px] border-5 md:border-10 border-white";
 const cardThumbSize = "w-full h-[280px]";
 
 // asset
@@ -55,6 +55,13 @@ const imgCopy = "bg-[var(--color-dark)]/40 cursor-pointer text-white";
 const imgTrans = "transition-all duration-300";
 
 const imgLoading = "absolute inset-0";
+
+// metadata
+const metaBase = "text-[13px] xl:text-[15px] text-[var(--color-dark)]/50 py-3";
+const metaLayout = "flex items-center gap-[20px]";
+
+const metaButtonBase = "cursor-pointer hover:bg-[var(--color-primary)] hover:text-white !rounded-[10px]";
+const metaButtonSize = "w-[40px] h-[40px]";
 
 export const dashboardStyles = {
   navContainer: cn(navBase, navPosition, navSize, navSpace, navLayout),
@@ -77,4 +84,8 @@ export const dashboardStyles = {
 
   images: cn(imgBase, imgSize, imgLayout),
   loading: cn(imgLoading),
+
+  meta: cn(metaBase, metaLayout),
+  metaButton: cn(metaButtonBase, metaButtonSize),
+  controlButton: cn("justify-between", metaBase, metaLayout),
 };

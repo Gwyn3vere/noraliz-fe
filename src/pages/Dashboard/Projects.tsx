@@ -1,16 +1,29 @@
-import { memo } from "react";
+import { memo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { dashboardStyles as styles } from "./Dashboard.styles";
 import EmptySpace from "./EmptySpace";
 import { images } from "@/assets/images";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, Ellipsis, Clock, Info } from "lucide-react";
+import { CirclePlus, Ellipsis, Clock, Info, Book } from "lucide-react";
+import { CopyIcon, TrashIcon, PenIcon } from "@phosphor-icons/react";
 import type { ProjectSummary } from "@/types";
 import { formatEditedTime } from "@/utils/format";
 import Control from "./Control";
 import { useProjects } from "@/components/hooks/useProjects";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 export default function Projects() {
-  const { projects, error } = useProjects();
+  const { projects, error, removeProject } = useProjects();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    await removeProject(deleteTarget.id);
+    setIsDeleting(false);
+    setDeleteTarget(null);
+  };
 
   // Error state
   if (error) {
@@ -35,51 +48,94 @@ export default function Projects() {
       }
     />
   ) : (
-    <div className={styles.contentContainer}>
-      <div className="pt-[40px] pb-[20px] md:py-[40px]">
-        <Control
-          button={
-            <Button className={styles.emptyButton}>
-              <CirclePlus strokeWidth={3} />
-              Create new project
-            </Button>
-          }
-        />
+    <>
+      <div className={styles.contentContainer}>
+        <div className="pt-[40px] pb-[20px] md:py-[40px]">
+          <Control
+            button={
+              <Button className={styles.emptyButton}>
+                <CirclePlus strokeWidth={3} />
+                Create new project
+              </Button>
+            }
+          />
+        </div>
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onDelete={() => setDeleteTarget({ id: project.id, name: project.name })}
+            />
+          ))}
+        </div>
       </div>
-      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </div>
-    </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={() => !isDeleting && setDeleteTarget(null)}
+        title="Delete project"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }
 
 interface ProjectCardProps {
   project: ProjectSummary;
+  onDelete: () => void;
 }
 
-const ProjectCard = memo(function ProjectCard({ project }: ProjectCardProps) {
+const ProjectCard = memo(function ProjectCard({ project, onDelete }: ProjectCardProps) {
+  const [optionsOpen, setOptionsOpen] = useState(false);
+
   return (
     <div className={styles.cardContainer}>
       <div className={styles.cardThumb} />
       <div className="px-2.5">
-        <div className=" flex items-center justify-between">
+        <div className=" flex items-center justify-between my-1">
           <div className="text-[20px] font-bold truncate mb-2">{project.name}</div>
-          <Button className="w-[30px] h-[30px] bg-[var(--color-dark)]/10 !rounded-[10px]">
+          <Button className={styles.metaButton} onClick={() => setOptionsOpen((prev) => !prev)}>
             <Ellipsis size={24} strokeWidth={3} />
           </Button>
         </div>
         <div className=" w-full h-[1px] bg-[var(--color-dark)]/10" />
-        <div className="flex items-center gap-[20px] text-[13px] xl:text-[15px] text-[var(--color-dark)]/50 py-2">
-          <div className="flex items-center gap-2 truncate">
+
+        {/* Metadata */}
+        <div className={cn(styles.meta, optionsOpen ? "hidden" : "flex")}>
+          <div className="flex items-center gap-2 truncate h-[40px]">
             <Clock size={15} strokeWidth={3} />
             {formatEditedTime(project.updatedAt)}
           </div>
 
-          <div className="flex items-center gap-2 truncate">
+          <div className="flex items-center gap-2 truncate h-[40px]">
             <Info size={15} strokeWidth={3} />
             {project.isPublic ? "Published" : "Draft"}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className={cn(styles.controlButton, optionsOpen ? "flex" : "hidden")}>
+          <div className="flex items-center gap-2 truncate">
+            <Book size={15} strokeWidth={3} />
+            {project.pageCount === 1 ? "page" : "pages"}: {project.pageCount}
+          </div>
+
+          <div className="flex items-center truncate">
+            <Button className={styles.metaButton}>
+              <CopyIcon size={20} weight="fill" />
+            </Button>
+            <Button className={styles.metaButton}>
+              <PenIcon size={20} weight="fill" />
+            </Button>
+            <Button className={styles.metaButton} onClick={onDelete}>
+              <TrashIcon size={20} weight="fill" />
+            </Button>
           </div>
         </div>
       </div>

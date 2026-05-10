@@ -33,13 +33,21 @@ export function useProjects(): UseProjectsReturn {
   }, [loadProjects]);
 
   const createNewProject = async (name: string, description?: string) => {
-    const newProject = await createProject(name, description);
-    setProjects((prev) => [newProject, ...prev]);
+    try {
+      const newProject = await createProject(name, description);
+      setProjects((prev) => [newProject, ...prev]);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to create project.");
+    }
   };
 
   const removeProject = async (id: string) => {
-    await deleteProject(id);
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await deleteProject(id);
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to delete project.");
+    }
   };
 
   return { projects, isLoading, error, createNewProject, removeProject };
