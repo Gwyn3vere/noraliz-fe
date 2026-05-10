@@ -62,7 +62,7 @@ export default function Header() {
           </div>
           <div className="hidden md:flex flex-col justify-center select-none">
             <span className="text-[15px] font-bold leading-none">{isLoading ? "..." : user?.fullName || "User"}</span>
-            <p className="text-[12px]">{isLoading ? "..." : user?.email || ""}</p>
+            <p className="text-[12px]">{isLoading ? "..." : user?.email || "email@example.com"}</p>
           </div>
           <ChevronDown
             size={15}
