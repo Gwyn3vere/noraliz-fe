@@ -49,3 +49,17 @@ export interface UserSummary {
   email: string;
   fullName: string;
 }
+
+export interface BlockItem {
+  type: string;
+  label: string;
+  thumbnail: string;
+}
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  badge?: string;
+  thumbnail?: string;
+  children?: MenuItem[];
+}

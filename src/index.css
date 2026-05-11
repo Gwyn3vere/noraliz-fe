@@ -13,9 +13,12 @@
   --color-dark: #2f2f2f;
   --color-error: #de3a3a;
   --color-success: #4285f4;
+
   --color-body-light: rgba(255, 255, 255, 0.95);
   --color-body-dark: rgba(47, 47, 47, 0.95);
+
   --color-gradient-auth: 45deg, rgba(47, 47, 47, 1) 12%, rgba(47, 47, 47, 0.8) 100%;
+  --color-gradient-soon: 90deg, rgba(66, 133, 244, 0.5) 0%, rgba(66, 133, 244, 1) 100%;
 
   --shadow-sm: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   --shadow-xs: rgba(0, 0, 0, 0.16) 0px 1px 4px;
@@ -29,4 +32,19 @@ body {
   background: var(--color-body-light);
   font-family: "Switzer", sans-serif;
   color: var(--color-dark);
+}
+
+.hover-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.hover-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hover-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 20px;
+  transition: background-color 0.3s ease;
+}
+.hover-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.25);
 }
