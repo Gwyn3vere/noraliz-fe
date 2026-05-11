@@ -1,13 +1,18 @@
 import api from "./api";
-import type { ProjectSummary } from "@/types";
+import type { ProjectSummary, ProjectDetail } from "@/types";
 
 export async function fetchProjects(): Promise<ProjectSummary[]> {
   const response = await api.get("/projects");
   return response.data;
 }
 
-export async function createProject(name: string, description?: string): Promise<ProjectSummary> {
+export async function createProject(name: string, description?: string): Promise<ProjectSummary | null> {
   const response = await api.post("/projects", { name, description });
+  return response.data;
+}
+
+export async function fetchProjectDetail(id: string): Promise<ProjectDetail> {
+  const response = await api.get(`/projects/${id}`);
   return response.data;
 }
 

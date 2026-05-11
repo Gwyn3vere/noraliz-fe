@@ -77,6 +77,12 @@ export const dashboardStyles = {
 
   cardContainer: cn(cardBase, cardSize),
   cardThumb: cn(cardThumbBase, cardThumbSize),
+  cardHover: cn(assetHover, cardThumbSize, imgLoading, cardThumbBase, imgTrans, wrapperLayout),
+  cardButton: cn(
+    "bg-[var(--color-primary)] py-4 px-6 rounded-[10px] " +
+      "font-medium text-[14px] text-white" +
+      " flex items-center gap-1",
+  ),
 
   assetContainer: cn(assetBase, assetPosition),
   assetCopy: cn(imgCopy, imgLoading, imgBase, imgLayout, imgTrans),

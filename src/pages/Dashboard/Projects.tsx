@@ -5,17 +5,26 @@ import EmptySpace from "./EmptySpace";
 import { images } from "@/assets/images";
 import { Button } from "@/components/ui/button";
 import { CirclePlus, Ellipsis, Clock, Info, Book } from "lucide-react";
-import { CopyIcon, TrashIcon, PenIcon } from "@phosphor-icons/react";
+import { CopyIcon, TrashIcon, PenIcon, StackIcon } from "@phosphor-icons/react";
 import type { ProjectSummary } from "@/types";
 import { formatEditedTime } from "@/utils/format";
 import Control from "./Control";
 import { useProjects } from "@/components/hooks/useProjects";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Projects() {
-  const { projects, error, removeProject } = useProjects();
+  const { projects, error, removeProject, createNewProject } = useProjects();
+  const navigate = useNavigate();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleCreateProject = async () => {
+    const newProject = await createNewProject("Untitled Project");
+    if (newProject) {
+      navigate(`/builder/${newProject.id}`);
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -25,7 +34,6 @@ export default function Projects() {
     setDeleteTarget(null);
   };
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
@@ -41,7 +49,7 @@ export default function Projects() {
       title="Ready to build?"
       content='Your canvas is waiting. Click "Create new project" to turn your vision into reality.'
       button={
-        <Button className={styles.emptyButton}>
+        <Button className={styles.emptyButton} onClick={handleCreateProject}>
           <CirclePlus strokeWidth={3} />
           Create new project
         </Button>
@@ -53,7 +61,7 @@ export default function Projects() {
         <div className="pt-[40px] pb-[20px] md:py-[40px]">
           <Control
             button={
-              <Button className={styles.emptyButton}>
+              <Button className={styles.emptyButton} onClick={handleCreateProject}>
                 <CirclePlus strokeWidth={3} />
                 Create new project
               </Button>
@@ -96,7 +104,18 @@ const ProjectCard = memo(function ProjectCard({ project, onDelete }: ProjectCard
 
   return (
     <div className={styles.cardContainer}>
-      <div className={styles.cardThumb} />
+      {/* Thumbail */}
+      <Link to={`/builder/${project.id}`}>
+        <div className="group relative ">
+          <div className={styles.cardThumb} />
+          <div className={styles.cardHover}>
+            <div className={styles.cardButton}>
+              <StackIcon size={20} weight="fill" /> Open in Builder
+            </div>
+          </div>
+        </div>
+      </Link>
+      {/* Project infomation */}
       <div className="px-2.5">
         <div className=" flex items-center justify-between my-1">
           <div className="text-[20px] font-bold truncate mb-2">{project.name}</div>

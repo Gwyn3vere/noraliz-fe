@@ -20,6 +20,18 @@ export interface ProjectSummary {
   isPublic: boolean;
 }
 
+export interface ProjectDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  jsonData: any; // Hoặc định nghĩa rõ hơn sau
+  thumbnailUrl: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  pageCount: number;
+}
+
 export interface AssetSummary {
   id: string;
   fileName: string;
