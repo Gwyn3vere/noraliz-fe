@@ -10,11 +10,7 @@ function AppContent() {
   const isReady = useAuthLoader();
 
   if (!isReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
+    return null;
   }
 
   return <AppRoutes />;

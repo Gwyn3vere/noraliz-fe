@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import { PageLoader } from "@/pages/Loading/PageLoader";
 
 const Login = lazy(() => import("@/pages/Auth/Login"));
 const Register = lazy(() => import("@/pages/Auth/Register"));
@@ -8,11 +9,7 @@ const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 
 function PageLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  );
+  return <PageLoader />;
 }
 
 function LazyPage({ children }: { children: React.ReactNode }) {

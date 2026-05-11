@@ -6,7 +6,7 @@ interface UseProjectsReturn {
   projects: ProjectSummary[];
   isLoading: boolean;
   error: string | null;
-  createNewProject: (name: string, description?: string) => Promise<void>;
+  createNewProject: (name: string, description?: string) => Promise<ProjectSummary | null>;
   removeProject: (id: string) => Promise<void>;
 }
 
@@ -36,8 +36,10 @@ export function useProjects(): UseProjectsReturn {
     try {
       const newProject = await createProject(name, description);
       setProjects((prev) => [newProject, ...prev]);
+      return newProject;
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to create project.");
+      return null;
     }
   };
 

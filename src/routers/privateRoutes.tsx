@@ -1,16 +1,14 @@
 import { lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
+import BuilderLayout from "@/components/layouts/BuilderLayout";
+import { PageLoader } from "@/pages/Loading/PageLoader";
 
 const Builder = lazy(() => import("../pages/Builder/Builder"));
 const Dashboard = lazy(() => import("@/pages/Dashboard/Dashboard"));
 
 function PageLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  );
+  return <PageLoader />;
 }
 
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -22,12 +20,13 @@ function LazyPage({ children }: { children: React.ReactNode }) {
 // ──────────────────────────────────
 export const privateRoutes: RouteObject[] = [
   {
-    path: "/builder/:projectId?",
-    element: (
-      <LazyPage>
-        <Builder />
-      </LazyPage>
-    ),
+    element: <BuilderLayout />,
+    children: [
+      {
+        path: "/builder/:projectId",
+        element: <Builder />,
+      },
+    ],
   },
   {
     element: <DashboardLayout />,
