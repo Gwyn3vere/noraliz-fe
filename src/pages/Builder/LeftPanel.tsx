@@ -2,11 +2,12 @@ import React, { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { CaretRightIcon } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/types";
 import { LEFT_PANEL_SECTIONS } from "@/constants/leftPanel";
 import Menu from "./Menu";
 import { useBlockMenu } from "@/components/hooks/useBlockMenu";
+import { cn } from "@/lib/utils";
+import { builderStyles as styles } from "./Builder.styles";
 
 export default function LeftPanel() {
   const {
@@ -21,33 +22,25 @@ export default function LeftPanel() {
 
   return (
     <div className="relative">
-      <aside className="relative bg-[var(--color-light)] z-40 flex flex-col w-[260px] h-screen">
+      <aside className={styles.lPanelContainer}>
         {/* Logo */}
-        <div className="h-[100px] px-[20px] border-b border-[var(--color-dark)]/10">
-          <div className="flex items-center gap-2.5 pt-[20px]">
-            <div className="w-[50px] h-[50px] rounded-[10px] bg-[var(--color-primary)]" />
-            <span className="font-display font-bold text-[30px]">NORALIZ</span>
+        <div className={styles.lPanelLogoBlock}>
+          <div className={styles.lPanelLogoLayout}>
+            <div className={styles.lPanelLogo} />
+            <span className={styles.lPanelLogoBrand}>NORALIZ</span>
           </div>
         </div>
 
         {/* Search */}
-        <div className="h-[80px] border-b border-[var(--color-dark)]/10 px-[20px]">
+        <div className={styles.lPanelSearchContainer}>
           <div className="relative hidden md:block">
-            <MagnifyingGlassIcon
-              size={17}
-              weight="bold"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[var(--color-dark)]/40"
-            />
-            <Input
-              type="search"
-              placeholder=" Search..."
-              className="pl-9 my-[20px] w-full !h-[40px] bg-[var(--color-light)]"
-            />
+            <MagnifyingGlassIcon size={17} weight="bold" className={styles.lPanelSearchIcon} />
+            <Input type="search" placeholder=" Search..." className={styles.lPanelSearchInput} />
           </div>
         </div>
 
         {/* Dropdown category */}
-        <div className="flex-1 p-[20px] flex flex-col gap-[12px] overflow-auto hover-scrollbar">
+        <div className={styles.lPanelDropdownContainer}>
           {LEFT_PANEL_SECTIONS.map((cate) => (
             <Category
               key={cate.id}
@@ -94,25 +87,18 @@ const Category = React.memo(function Category({
 
   return (
     <div className="select-none">
-      <div className="flex items-center justify-between">
-        <div
-          className="flex items-center gap-[7px] cursor-pointer hover:text-[var(--color-primary)] transition-all"
-          onClick={handleDropdown}
-        >
+      <div className={styles.cateContainer}>
+        <div className={styles.cateToggle} onClick={handleDropdown}>
           <CaretRightIcon
             size={16}
             weight="fill"
             className={cn(dropdown ? "rotate-90 transition-all" : "transition-all")}
           />
-          <strong>{cate.label}</strong>
+          <strong className="uppercase text-[14px]">{cate.label}</strong>
         </div>
-        <div
-          className={cn(
-            "h-[20px] w-[60px] flex items-center justify-center bg-linear-[var(--color-gradient-soon)] rounded-full",
-            cate.badge ? "flex" : "hidden",
-          )}
-        >
-          <span className="text-[13px] font-bold text-white">{cate.badge}</span>
+
+        <div className={cn(styles.cateMenu, cate.badge ? "flex" : "hidden")}>
+          <span className={styles.cateLabel}>{cate.badge}</span>
         </div>
       </div>
 
@@ -148,13 +134,7 @@ const Dropdown = React.memo(function Dropdown({
   if (!childCate || childCate.length === 0) return null;
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden transition-all duration-300 ease-in-out",
-        isOpen ? "max-h-96 opacity-100 mt-[11px]" : "max-h-0 opacity-0",
-        "space-y-1",
-      )}
-    >
+    <div className={cn(styles.dropdownContainer, isOpen ? "max-h-96 opacity-100 mt-[11px]" : "max-h-0 opacity-0")}>
       {childCate.map((child) => (
         <div
           key={child.id}
@@ -165,7 +145,7 @@ const Dropdown = React.memo(function Dropdown({
           <div
             className={cn(
               isActive?.id === child.id ? "bg-[var(--color-dark)]/5" : " hover:bg-[var(--color-dark)]/5",
-              "pl-[23px] h-[35px] flex items-center rounded-[10px] cursor-pointer transition-all text-[14px]",
+              styles.dropdownLabel,
             )}
           >
             {child.label}

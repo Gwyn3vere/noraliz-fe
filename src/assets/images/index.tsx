@@ -11,6 +11,7 @@ import avatar from "./avatar-svgrepo-com.svg";
 import emptyProjects from "./empty-projects.svg";
 import emptyAssets from "./empty assets.svg";
 import emptyUICustom from "./ui custom coming soon.svg";
+import emptyCanvas from "./canvas empty icon.svg";
 
 export const images = {
   txVertical,
@@ -29,4 +30,5 @@ export const images = {
   emptyProjects,
   emptyAssets,
   emptyUICustom,
+  emptyCanvas,
 };

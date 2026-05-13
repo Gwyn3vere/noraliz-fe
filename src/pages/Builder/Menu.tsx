@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { builderStyles as styles } from "./Builder.styles";
 import type { MenuItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { SquaresFourIcon, MagnifyingGlassIcon, XCircleIcon, ListIcon } from "@phosphor-icons/react";
@@ -51,46 +52,37 @@ function Menu({ category, onClose, onEnterMenu, onLeaveMenu }: MenuProps) {
   const blocks = category?.children || [];
 
   return (
-    <div className="absolute top-0 left-[260px] z-10 h-screen" style={{ width: "calc(100vw - 260px)" }}>
+    <div className={styles.menuContainer} style={{ width: "calc(100vw - 260px)" }}>
       {/* Backdrop */}
-      <div
-        className={cn(
-          "absolute inset-0 bg-[var(--color-dark)]/30 transition-opacity duration-300 ease-in-out",
-          backdropVisible ? "opacity-100" : "opacity-0",
-        )}
-        onClick={onClose}
-      />
+      <div className={cn(styles.menuBackdrop, backdropVisible ? "opacity-100" : "opacity-0")} onClick={onClose} />
 
       {/* Menu Panel */}
       <div
-        className={cn(
-          "relative z-20 bg-[#FBFBFB] h-screen border-l border-[var(--color-dark)]/10 transition-all duration-300 ease-in-out",
-          menuVisible ? "max-w-[420px] translate-x-0" : "max-w-0 translate-x-[-420px]",
-        )}
+        className={cn(styles.menuPanel, menuVisible ? "max-w-[420px] translate-x-0" : "max-w-0 translate-x-[-420px]")}
         onMouseEnter={onEnterMenu}
         onMouseLeave={onLeaveMenu}
       >
         <div className="w-[420px]">
           {/* Header */}
-          <div className={cn("h-[100px] px-[20px]")}>
-            <div className="space-y-[20px] pt-[20px]">
-              <div className="h-[20px] flex items-center justify-between">
-                <div className="flex items-center gap-[5px]">
+          <div className={styles.menuPanelHeaderSize}>
+            <div className={styles.menuPanelHeaderSpace}>
+              <div className={styles.menuPanelHeaderTitle}>
+                <div className={styles.menuPanelHeaderTitleLayout}>
                   <ListIcon size={20} />
-                  <span className="text-[14px] font-medium uppercase">Menu sidebar</span>
+                  <span className={styles.menuPanelHeaderTitleText}>Menu sidebar</span>
                 </div>
                 <Button className="h-[20px] w-[20px] !rounded-full" onClick={onClose}>
                   <XCircleIcon size={20} />
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-[30px] font-bold leading-none">{category?.label}</span>
+              <div className={styles.menuPanelHeaderCategory}>
+                <span className={styles.menuPanelHeaderCategoryLabel}>{category?.label}</span>
                 <div className="space-x-[10px]">
-                  <Button className="h-[40px] w-[40px] border border-[var(--color-dark)]/40 !rounded-[10px]">
+                  <Button className={styles.menuPanelHeaderCategoryButton}>
                     <SquaresFourIcon size={20} weight="fill" />
                   </Button>
-                  <Button className="h-[40px] w-[40px] border border-[var(--color-dark)]/40 !rounded-[10px]">
+                  <Button className={styles.menuPanelHeaderCategoryButton}>
                     <MagnifyingGlassIcon size={20} />
                   </Button>
                 </div>
@@ -100,15 +92,11 @@ function Menu({ category, onClose, onEnterMenu, onLeaveMenu }: MenuProps) {
 
           {/* Grid các block */}
           <div className="p-5">
-            <div className="grid grid-cols-2 gap-5">
+            <div className={styles.menuPanelList}>
               {blocks.map((block) => (
                 <div
                   key={block.id}
-                  className={cn(
-                    "border border-[var(--color-dark)]/10 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 cursor-pointer transition-all group",
-                    "w-[180px] h-[180px] flex flex-col items-center justify-center gap-2 p-3 rounded-xl",
-                    "bg-[var(--color-light)]",
-                  )}
+                  className={styles.menuPanelBlock}
                   draggable
                   onDragStart={(e) => {
                     e.dataTransfer.setData("blockType", block.id);
@@ -116,17 +104,15 @@ function Menu({ category, onClose, onEnterMenu, onLeaveMenu }: MenuProps) {
                   }}
                 >
                   {/* Thumbnail */}
-                  <div className="w-16 h-16 rounded-lg bg-[var(--color-dark)]/5 flex items-center justify-center overflow-hidden">
+                  <div className={styles.menuPanelThumbail}>
                     {block.thumbnail ? (
-                      <img src={block.thumbnail} alt={block.label} className="w-full h-full object-cover" />
+                      <img src={block.thumbnail} alt={block.label} className={styles.menuPanelThumbailImg} />
                     ) : (
-                      <span className="text-lg font-bold text-[var(--color-dark)]/30">{block.label[0]}</span>
+                      <span className={styles.menuPanelThumbailLabel}>{block.label[0]}</span>
                     )}
                   </div>
                   {/* Tên block */}
-                  <span className="text-xs font-medium text-[var(--color-dark)]/70 group-hover:text-[var(--color-primary)] text-center leading-tight">
-                    {block.label}
-                  </span>
+                  <span className={styles.menuPanelBlockLabel}>{block.label}</span>
                 </div>
               ))}
             </div>

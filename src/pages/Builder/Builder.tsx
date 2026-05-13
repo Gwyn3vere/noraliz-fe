@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { useProjectLoader } from "@/components/hooks/useProjectLoader";
+import { useProjectInit } from "@/components/hooks/useProjectInit";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import ProjectLoader from "../Loading/ProjectLoader";
 import LeftPanel from "./LeftPanel";
+import RighPanel from "./RightPanel";
+import Canvas from "./Canvas";
 
 export default function Builder() {
   const { project, isLoading, error } = useProjectLoader();
   const [isLoaderReady, setIsLoaderReady] = useState(false);
   const [isApiDone, setIsApiDone] = useState(false);
+
+  // Khởi tạo editor store với dữ liệu project từ API
+  useProjectInit(project);
 
   useEffect(() => {
     if (!isLoading && !error) {
@@ -35,19 +41,7 @@ export default function Builder() {
     <div className="flex items-center">
       <LeftPanel />
       <Canvas />
-      <RightPanel />
+      <RighPanel />
     </div>
   );
-}
-
-function Canvas() {
-  return (
-    <div className="flex-1 h-screen flex items-center justify-center">
-      <div className="w-full h-[780px] mx-[40px] bg-white"></div>
-    </div>
-  );
-}
-
-function RightPanel() {
-  return <div className="bg-[var(--color-light)] w-[260px] h-screen"></div>;
 }
