@@ -1,13 +1,57 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { CaretRightIcon } from "@phosphor-icons/react";
-import type { MenuItem } from "@/types";
+import type { MenuItem, PrimitiveBlock } from "@/types";
 import { LEFT_PANEL_SECTIONS } from "@/constants/leftPanel";
 import Menu from "./Menu";
 import { useBlockMenu } from "@/components/hooks/useBlockMenu";
+import { usePrimitiveBlocks } from "@/components/hooks/usePrimitiveBlocks";
 import { cn } from "@/lib/utils";
 import { builderStyles as styles } from "./Builder.styles";
+
+const CATEGORY_MAP: Record<string, { id: string; label: string }> = {
+  Layout: { id: "container", label: "Containers" },
+  Typography: { id: "typography", label: "Typography" },
+  Media: { id: "media", label: "Media" },
+  Interactive: { id: "interactive", label: "Interactive" },
+  Embed: { id: "embed", label: "Embed" },
+};
+
+function buildPrimitiveChildren(apiBlocks: PrimitiveBlock[]): MenuItem[] {
+  const groups: Record<string, MenuItem[]> = {};
+
+  for (const block of apiBlocks) {
+    const catInfo = CATEGORY_MAP[block.category];
+    if (!catInfo) continue;
+
+    if (!groups[catInfo.id]) groups[catInfo.id] = [];
+
+    groups[catInfo.id].push({
+      id: block.id,
+      label: block.name,
+      thumbnail: block.thumbnailUrl,
+      kind: block.type === "blank-section" ? "section" : "block",
+      type: block.type,
+      variant: block.variant,
+    });
+  }
+
+  // Sắp xếp các nhóm theo thứ tự mong muốn
+  const order = ["container", "typography", "media", "interactive", "embed"];
+  const result: MenuItem[] = [];
+  for (const key of order) {
+    if (groups[key]) {
+      result.push({
+        id: key,
+        label: Object.values(CATEGORY_MAP).find((c) => c.id === key)?.label || key,
+        children: groups[key],
+      });
+    }
+  }
+
+  return result;
+}
 
 export default function LeftPanel() {
   const {
@@ -19,6 +63,18 @@ export default function LeftPanel() {
     handleLeaveMenu,
     handleCloseBlockMenu,
   } = useBlockMenu();
+
+  const { blocks: apiBlocks } = usePrimitiveBlocks();
+
+  const menuSections = useMemo(() => {
+    return LEFT_PANEL_SECTIONS.map((section) => {
+      if (section.id === "primitive-blocks") {
+        const children = buildPrimitiveChildren(apiBlocks);
+        return { ...section, children };
+      }
+      return section;
+    });
+  }, [apiBlocks]);
 
   return (
     <div className="relative">
@@ -41,7 +97,7 @@ export default function LeftPanel() {
 
         {/* Dropdown category */}
         <div className={styles.lPanelDropdownContainer}>
-          {LEFT_PANEL_SECTIONS.map((cate) => (
+          {menuSections.map((cate) => (
             <Category
               key={cate.id}
               cate={cate}

@@ -61,7 +61,10 @@ export interface MenuItem {
   label: string;
   badge?: string;
   thumbnail?: string;
+  type?: string;
   children?: MenuItem[];
+  kind?: "section" | "block";
+  variant?: string;
 }
 
 export interface BlockStyles {

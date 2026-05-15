@@ -4,7 +4,7 @@ const MIN_ZOOM = 25;
 const MAX_ZOOM = 200;
 const ZOOM_STEP = 10;
 
-export function useCanvasInteraction(initialZoom = 100) {
+export function useCanvasInteraction(initialZoom = 100, disabled?: boolean) {
   const [zoom, setZoom] = useState(initialZoom);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -24,22 +24,27 @@ export function useCanvasInteraction(initialZoom = 100) {
     setPanOffset({ x: 0, y: 0 });
   }, []);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    setIsPanning(true);
-    lastMousePos.current = { x: e.clientX, y: e.clientY };
-    e.preventDefault();
-  }, []);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (disabled) return;
+      if (e.button !== 0) return;
+      setIsPanning(true);
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+      e.preventDefault();
+    },
+    [disabled],
+  );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
+      if (disabled) return;
       if (!isPanning) return;
       const dx = e.clientX - lastMousePos.current.x;
       const dy = e.clientY - lastMousePos.current.y;
       setPanOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
       lastMousePos.current = { x: e.clientX, y: e.clientY };
     },
-    [isPanning],
+    [isPanning, disabled],
   );
 
   const handleMouseUp = useCallback(() => {
