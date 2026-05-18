@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,8 @@ import {
   CopySimpleIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
+import { useEditorStore } from "@/stores/editorStore";
+import { cn } from "@/lib/utils";
 
 interface Props {
   sectionId: string;
@@ -16,46 +18,64 @@ interface Props {
   onClose?: () => void;
 }
 
-export function FloatingSectionToolbar({ sectionId, order }: Props) {
+export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
+  const reorderingSectionId = useEditorStore((state) => state.reorderingSectionId);
+  const setReorderingSection = useEditorStore((state) => state.setReorderingSection);
+  const reorderSections = useEditorStore((state) => state.reorderSections);
+  const currentPage = useEditorStore((state) => state.getCurrentPage());
+
+  const isReorderActive = reorderingSectionId === sectionId;
+  const sections = currentPage?.sections || [];
+  const currentIndex = sections.findIndex((s) => s.id === sectionId);
+
+  const moveUp = () => {
+    if (currentIndex > 0) {
+      reorderSections(currentIndex, currentIndex - 1);
+    }
+  };
+  const moveDown = () => {
+    if (currentIndex < sections.length - 1) {
+      reorderSections(currentIndex, currentIndex + 1);
+    }
+  };
+
+  const updatePosition = useCallback(() => {
     const sectionElement = document.getElementById(sectionId);
     const canvasElement = document.getElementById("builder-canvas");
-    if (!sectionElement || !canvasElement) return;
+    if (!sectionElement || !canvasElement || !toolbarRef.current) return;
 
-    const updatePosition = () => {
-      const sectionRect = sectionElement.getBoundingClientRect();
-      const canvasRect = canvasElement.getBoundingClientRect();
-      const toolbarWidth = toolbarRef.current?.offsetWidth || 300;
+    const sectionRect = sectionElement.getBoundingClientRect();
+    const canvasRect = canvasElement.getBoundingClientRect();
+    const toolbarWidth = toolbarRef.current.offsetWidth || 300;
 
-      // Vị trí mặc định: giữa trên của section
-      let left = sectionRect.left + sectionRect.width / 2;
-      const top = sectionRect.top - 50;
+    let left = sectionRect.left + sectionRect.width / 2;
+    const top = sectionRect.top - 50;
 
-      // Giới hạn left trong phạm vi canvas
-      const minLeft = canvasRect.left + toolbarWidth / 2;
-      const maxLeft = canvasRect.right - toolbarWidth / 2;
-      left = Math.max(minLeft, Math.min(left, maxLeft));
+    const minLeft = canvasRect.left + toolbarWidth / 2;
+    const maxLeft = canvasRect.right - toolbarWidth / 2;
+    left = Math.max(minLeft, Math.min(left, maxLeft));
 
-      setPosition({ top, left });
-    };
-
-    updatePosition();
-    setIsVisible(true);
-
-    window.addEventListener("scroll", updatePosition);
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      window.removeEventListener("scroll", updatePosition);
-      window.removeEventListener("resize", updatePosition);
-    };
+    setPosition({ top, left });
   }, [sectionId]);
 
-  if (!isVisible) return null;
+  // Cập nhật vị trí liên tục để bám theo section khi pan/scroll
+  useEffect(() => {
+    let rafId: number;
+    const loop = () => {
+      updatePosition();
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, [updatePosition]);
+
+  // Cập nhật ngay khi order thay đổi
+  useEffect(() => {
+    updatePosition();
+  }, [order, updatePosition]);
 
   return createPortal(
     <div
@@ -69,30 +89,36 @@ export function FloatingSectionToolbar({ sectionId, order }: Props) {
       }}
     >
       <span className="text-xs font-medium text-gray-500 pl-2">Section #{order}</span>
-      {/* Move */}
       <div>
-        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
+        <Button onClick={moveUp} className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
           <ArrowUpIcon size={20} weight="bold" />
         </Button>
-        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
+        <Button onClick={moveDown} className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
           <ArrowDownIcon size={20} weight="bold" />
         </Button>
       </div>
-      {/* Drag - Code */}
       <div>
-        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
+        <Button
+          className={cn(
+            "w-[40px] h-[40px] !rounded-full",
+            isReorderActive ? "bg-[var(--color-primary)] text-white" : "hover:bg-[var(--color-light)]/5",
+          )}
+          onClick={(e) => {
+            e.stopPropagation(); // ← ngăn chặn select section
+            setReorderingSection(isReorderActive ? null : sectionId);
+          }}
+        >
           <ArrowsOutCardinalIcon size={20} weight="bold" />
         </Button>
         <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
           <CodeIcon size={20} weight="bold" />
         </Button>
       </div>
-      {/* Duplicate - Remove */}
       <div>
         <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
           <CopySimpleIcon size={20} weight="bold" />
         </Button>
-        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
+        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5" onClick={onClose}>
           <TrashIcon size={20} weight="bold" />
         </Button>
       </div>

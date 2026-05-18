@@ -1,13 +1,28 @@
+import React, { useCallback, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
-import type { Block, Section, ColumnsBlock } from "@/types";
+import type { Block, Section, ColumnsBlock, ButtonBlock } from "@/types";
 import { images } from "@/assets/images";
 import { FloatingSectionToolbar } from "./FloatingSectionToolbar";
+import { useSectionDrop } from "@/components/hooks/useSectionDrop";
+import { useBlockDrop } from "@/components/hooks/useBlockDrop";
+import { useColumnDrop } from "@/components/hooks/useColumnDrop";
+import { useBlockReorder } from "@/components/hooks/useBlockReorder";
+import { useColumnReorder } from "@/components/hooks/useColumnReorder";
+import { useDroppable, useDndContext } from "@dnd-kit/core";
+import { DropZone } from "./DropZone";
+import { useInlineEdit } from "@/components/hooks/useInlineEdit";
 
 export function CanvasRenderer() {
   const currentProject = useEditorStore((state) => state.currentProject);
   const currentPageId = useEditorStore((state) => state.currentPageId);
 
   const currentPage = currentProject?.pages.find((p) => p.id === currentPageId);
+
+  const { setNodeRef: setPageRef, isOver: isPageOver } = useDroppable({
+    id: `page-drop-0`,
+    data: { pageId: currentPage?.id, order: 0 },
+  });
 
   if (!currentPage) {
     return (
@@ -19,20 +34,43 @@ export function CanvasRenderer() {
 
   if (currentPage.sections.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[780px]">
-        <img src={images.emptyCanvas} alt="empty canvas" />
-        <strong className="text-[30px]">Ready to build something great?</strong>
-        <p className="text-[15px] font-medium">Pick a section from the left panel to start creating your website.</p>
+      <div ref={setPageRef} data-page-id={currentPage.id} className="h-[calc(820px-86px)]">
+        <div className={cn("flex flex-col items-center justify-center h-full", isPageOver ? "hidden" : "flex")}>
+          <img src={images.emptyCanvas} alt="empty canvas" />
+          <strong className="text-[30px]">Ready to build something great?</strong>
+          <p className="text-[15px] font-medium">Pick a section from the left panel to start creating your website.</p>
+        </div>
+        {isPageOver && (
+          <div
+            className={cn("flex flex-col items-center justify-center h-full h-full", isPageOver ? "block" : "hidden")}
+          >
+            <div
+              className={cn(
+                "mt-4 px-4 py-2 bg-[var(--color-primary)]/20 rounded text-sm font-medium text-[var(--color-primary)]",
+              )}
+            >
+              Drop section here
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <>
-      {currentPage.sections.map((section) => (
-        <SectionRenderer key={section.id} section={section} />
+    <div data-page-id={currentPage.id} className="min-h-[calc(820px-86px)]">
+      <DropZone id={`page-drop-0`} data={{ pageId: currentPage.id, order: 0 }} direction="vertical" />
+      {currentPage.sections.map((section, index) => (
+        <React.Fragment key={section.id}>
+          <SectionRenderer section={section} />
+          <DropZone
+            id={`page-drop-${index + 1}`}
+            data={{ pageId: currentPage.id, order: index + 1 }}
+            direction="vertical"
+          />
+        </React.Fragment>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -40,73 +78,258 @@ function SectionRenderer({ section }: { section: Section }) {
   const selectedSectionId = useEditorStore((state) => state.selectedSectionId);
   const selectSection = useEditorStore((state) => state.selectSection);
   const isSelected = selectedSectionId === section.id;
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { setNodeRef, isOver } = useSectionDrop(section.id);
 
   const sectionStyles: React.CSSProperties = {
     ...(section.props as any)?.styles,
   };
 
-  const selectionClass = isSelected
-    ? "border-[var(--color-primary)] before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none"
-    : "border-transparent hover:border-[var(--color-primary)]";
+  const showOutline = isHovered || isSelected;
+  const editorClasses = cn(
+    "relative p-4 transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+  );
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    selectSection(section.id);
+  };
 
   return (
     <section
+      ref={setNodeRef}
       id={section.id}
-      className={`relative border-2 border-dashed p-4 transition-all ${selectionClass}`}
-      style={sectionStyles}
-      onClick={(e) => {
-        e.stopPropagation();
-        selectSection(section.id);
+      data-section-id={section.id}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={editorClasses}
+      style={{
+        ...sectionStyles,
+        minHeight: section.blocks.length === 0 ? "120px" : undefined,
       }}
+      onClick={handleClick}
     >
       {isSelected && (
         <FloatingSectionToolbar sectionId={section.id} order={section.order} onClose={() => selectSection(null)} />
       )}
       {section.blocks.map((block) => (
-        <BlockRenderer key={block.id} block={block} />
+        <BlockRenderer key={block.id} block={block} sectionId={section.id} />
       ))}
     </section>
   );
 }
 
-function BlockRenderer({ block }: { block: Block }) {
+function ColumnRenderer({
+  column,
+  sectionId,
+  columnsBlockId,
+  index,
+  total,
+}: {
+  column: ColumnsBlock["children"][0];
+  sectionId: string;
+  columnsBlockId: string;
+  index?: number;
+  total?: number;
+}) {
+  const { setNodeRef, isOver } = useColumnDrop(column.id, sectionId, columnsBlockId);
+  const reorderingSectionId = useEditorStore((s) => s.reorderingSectionId);
+  const isReorderMode = reorderingSectionId === sectionId;
+  const {
+    listeners,
+    attributes,
+    setNodeRef: setColDragRef,
+    isDragging,
+  } = useColumnReorder(column.id, columnsBlockId, sectionId, !isReorderMode);
+
+  const selectedColumnId = useEditorStore((state) => state.selectedColumnId);
+  const selectColumn = useEditorStore((state) => state.selectColumn);
+  const isSelected = selectedColumnId === column.id;
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { active } = useDndContext();
+  const isDraggingColumns = active?.data.current?.blockType === "columns";
+
+  const columnStyles: React.CSSProperties = {
+    ...(column as any).props?.styles,
+  };
+
+  const showOutline = isHovered || isSelected;
+  const editorClasses = cn(
+    "relative flex-1 p-4 transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+  );
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    selectColumn(column.id, sectionId);
+  };
+
+  return (
+    <div
+      ref={(node) => {
+        setNodeRef(node);
+        if (isReorderMode) setColDragRef(node);
+      }}
+      data-column-id={column.id}
+      data-columns-block-id={columnsBlockId}
+      onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        ...columnStyles,
+        minHeight: "120px",
+        padding: "8px",
+        opacity: isDragging ? 0.4 : 1,
+        cursor: isReorderMode ? "grab" : undefined,
+      }}
+      className={editorClasses}
+      {...(isReorderMode ? listeners : {})}
+      {...(isReorderMode ? attributes : {})}
+    >
+      {column.blocks.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-full gap-1 pointer-events-none select-none">
+          {isDraggingColumns ? (
+            <span className="text-[11px] font-medium text-red-400 uppercase tracking-wide">Cannot nest columns</span>
+          ) : (
+            <>
+              <span className="text-[11px] font-medium text-[var(--color-dark)]/30 uppercase tracking-wide">
+                Column {(index ?? 0) + 1}/{total ?? "?"}
+              </span>
+              <span className="text-[10px] text-[var(--color-dark)]/20">Drop blocks here</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {column.blocks.map((childBlock) => (
+        <BlockRenderer key={childBlock.id} block={childBlock} sectionId={sectionId} columnId={column.id} />
+      ))}
+    </div>
+  );
+}
+
+function BlockRenderer({ block, sectionId, columnId }: { block: Block; sectionId: string; columnId?: string }) {
   const selectedBlockId = useEditorStore((state) => state.selectedBlockId);
   const selectBlock = useEditorStore((state) => state.selectBlock);
+  const reorderingSectionId = useEditorStore((state) => state.reorderingSectionId);
+
+  const isReorderMode = reorderingSectionId === sectionId;
   const isSelected = selectedBlockId === block.id;
+
+  const { isEditing, contentRef, handleDoubleClick, handleBlur, handleKeyDown } = useInlineEdit(block);
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { setNodeRef: setDropRef, isOver } = useBlockDrop(block.id, sectionId, columnId);
+
+  const {
+    listeners,
+    attributes,
+    setNodeRef: setDragRef,
+    isDragging,
+  } = useBlockReorder(block.id, sectionId, columnId, !isReorderMode);
+
+  const combinedRef = useCallback(
+    (node: HTMLElement | null) => {
+      setDropRef(node);
+
+      if (isReorderMode) {
+        setDragRef(node);
+      }
+    },
+    [setDropRef, setDragRef, isReorderMode],
+  );
 
   const blockStyles: React.CSSProperties = {
     ...(block as any).props?.styles,
+    opacity: isDragging ? 0.4 : 1,
   };
 
-  const selectionClass = isSelected
-    ? "border-[var(--color-primary)] before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none"
-    : "border-transparent hover:border-[var(--color-primary)]";
+  const userClasses = (block as any).classes?.join(" ") || "";
+
+  const showOutline = isHovered || isSelected;
+
+  const editorClasses = cn(
+    "relative cursor-pointer transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+    isReorderMode ? "cursor-grab active:cursor-grabbing ring-2 ring-[var(--color-primary)]/30" : "",
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     selectBlock(block.id);
   };
 
+  const baseProps = {
+    onClick: handleClick,
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => setIsHovered(false),
+  };
+
+  const dragProps = isReorderMode
+    ? {
+        ...listeners,
+        ...attributes,
+      }
+    : {};
+
+  const interactionProps = {
+    ...baseProps,
+    ...dragProps,
+  };
+
   switch (block.type) {
-    // ── Typography ──
     case "text":
       return (
         <p
-          className={`relative border-2 border-dashed p-2 cursor-pointer transition-all ${selectionClass}`}
+          ref={(node) => {
+            combinedRef(node);
+            contentRef.current = node;
+          }}
+          data-block-id={block.id}
+          {...interactionProps}
+          contentEditable={isEditing}
+          suppressContentEditableWarning
+          onDoubleClick={handleDoubleClick}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, isEditing && "cursor-text outline-none")}
         >
           {(block as any).props?.content || "Text content"}
         </p>
       );
 
     case "heading": {
-      const HeadingTag = (block as any).props?.level || "h2";
+      const level = (block as any).props?.level || "h2";
+
+      const HeadingTag = level as React.ElementType;
+
+      const headingSizes: Record<string, string> = {
+        h1: "text-4xl font-extrabold",
+        h2: "text-3xl font-bold",
+        h3: "text-2xl font-bold",
+        h4: "text-xl font-semibold",
+        h5: "text-lg font-semibold",
+        h6: "text-base font-semibold",
+      };
+
       return (
         <HeadingTag
-          className={`relative border-2 border-dashed p-2 cursor-pointer transition-all font-bold ${selectionClass}`}
+          ref={combinedRef as any}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, headingSizes[level], "leading-tight tracking-tight")}
         >
           {(block as any).props?.content || "Heading"}
         </HeadingTag>
@@ -116,32 +339,40 @@ function BlockRenderer({ block }: { block: Block }) {
     case "blockquote":
       return (
         <blockquote
-          className={`relative border-2 border-dashed p-2 cursor-pointer transition-all italic ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLQuoteElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "italic")}
         >
           {(block as any).props?.content || "Quote"}
         </blockquote>
       );
 
-    // ── Media ──
     case "image":
       return (
         <img
+          ref={combinedRef as React.Ref<HTMLImageElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           src={(block as any).props?.src || "https://placehold.co/600x400"}
           alt={(block as any).props?.alt || "Image"}
-          className={`relative border-2 border-dashed cursor-pointer transition-all max-w-full h-auto ${selectionClass}`}
-          style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "max-w-full h-auto")}
+          style={{
+            ...blockStyles,
+            objectFit: (block as any).props?.objectFit || "cover",
+          }}
         />
       );
 
     case "video":
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses)}
         >
           <iframe
             src={(block as any).props?.embedUrl || ""}
@@ -156,9 +387,11 @@ function BlockRenderer({ block }: { block: Block }) {
     case "icon":
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all inline-flex ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "inline-flex")}
         >
           <svg width={(block as any).props?.size || 24} height={(block as any).props?.size || 24}>
             <circle cx="12" cy="12" r="10" fill={(block as any).props?.color || "#000"} />
@@ -166,28 +399,58 @@ function BlockRenderer({ block }: { block: Block }) {
         </div>
       );
 
-    // ── Interactive ──
-    case "button":
+    case "button": {
+      const btnBlock = block as ButtonBlock;
+
+      const rawHref = btnBlock.props?.href;
+
+      const href = typeof rawHref === "string" ? rawHref.trim() : "";
+
+      const label = btnBlock.props?.label || "Button";
+
+      if (href) {
+        return (
+          <a
+            ref={combinedRef as React.Ref<HTMLAnchorElement>}
+            data-block-id={block.id}
+            {...interactionProps}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={blockStyles}
+            className={cn(userClasses, editorClasses)}
+            onClick={(e) => {
+              e.preventDefault();
+              handleClick(e);
+            }}
+          >
+            {label}
+          </a>
+        );
+      }
+
       return (
         <button
-          className={`relative border-2 border-dashed cursor-pointer transition-all px-4 py-2 rounded-lg text-white ${selectionClass}`}
-          style={{
-            backgroundColor: (block as any).props?.variant === "primary" ? "var(--color-primary)" : "transparent",
-            color: (block as any).props?.variant === "primary" ? "#fff" : "var(--color-dark)",
-            ...blockStyles,
-          }}
-          onClick={handleClick}
+          ref={combinedRef as React.Ref<HTMLButtonElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          type="button"
+          style={blockStyles}
+          className={cn(userClasses, editorClasses)}
         >
-          {(block as any).props?.label || "Button"}
+          {label}
         </button>
       );
+    }
 
     case "form":
       return (
         <form
-          className={`relative border-2 border-dashed p-4 cursor-pointer transition-all space-y-2 ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLFormElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "space-y-2")}
         >
           {((block as any).props?.fields as any[])?.map((field, i) => (
             <input
@@ -198,80 +461,85 @@ function BlockRenderer({ block }: { block: Block }) {
               disabled
             />
           ))}
+
           <button type="button" className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg" disabled>
             {(block as any).props?.submitLabel || "Submit"}
           </button>
         </form>
       );
 
-    // ── Layout ──
     case "divider":
       return (
         <hr
-          className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLHRElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
           style={{
             borderColor: (block as any).props?.color || "#e5e5e5",
             borderWidth: (block as any).props?.thickness || 1,
             ...blockStyles,
           }}
-          onClick={handleClick}
         />
       );
 
     case "spacer":
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
           style={{
+            width: (block as any).props?.width || "100%",
             height: (block as any).props?.height || "40px",
             ...blockStyles,
           }}
-          onClick={handleClick}
         />
       );
 
     case "columns": {
       const columnsBlock = block as ColumnsBlock;
-      const columnChildren = columnsBlock.children || [];
+
       const gap = columnsBlock.props?.gap || "24px";
 
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
           style={{
             display: "flex",
             flexDirection: "row",
-            gap: gap,
+            gap,
+            minHeight: "200px",
+            padding: "8px",
             ...blockStyles,
           }}
-          onClick={handleClick}
         >
-          {columnChildren.map((column) => (
-            <div
+          {columnsBlock.children.map((column, index) => (
+            <ColumnRenderer
               key={column.id}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-              }}
-            >
-              {column.blocks.map((childBlock) => (
-                <BlockRenderer key={childBlock.id} block={childBlock} />
-              ))}
-            </div>
+              column={column}
+              columnsBlockId={columnsBlock.id}
+              sectionId={sectionId}
+              index={index}
+              total={columnsBlock.children.length}
+            />
           ))}
         </div>
       );
     }
 
-    // ── Embed ──
     case "map":
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all w-full h-64 ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "w-full h-64")}
         >
           <iframe
             src={(block as any).props?.embedUrl || "https://maps.google.com/maps?q=Hanoi&output=embed"}
@@ -285,9 +553,11 @@ function BlockRenderer({ block }: { block: Block }) {
     case "social":
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all flex gap-2 p-2 ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses, "flex gap-2")}
         >
           {((block as any).props?.links as any[])?.map((link, i) => (
             <div
@@ -304,9 +574,11 @@ function BlockRenderer({ block }: { block: Block }) {
     default:
       return (
         <div
-          className={`relative border-2 border-dashed cursor-pointer transition-all p-2 ${selectionClass}`}
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
           style={blockStyles}
-          onClick={handleClick}
+          className={cn(userClasses, editorClasses)}
         >
           <p className="text-gray-500 text-sm">{block.type}</p>
         </div>

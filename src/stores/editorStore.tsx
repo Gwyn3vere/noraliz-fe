@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Project, Page, Section, Block } from "@/types";
+import type { Project, Page, Section, Block, ColumnsBlock } from "@/types";
 
 interface EditorState {
   // ─── Core Data ───
@@ -9,6 +9,8 @@ interface EditorState {
   // ─── Selection ───
   selectedSectionId: string | null;
   selectedBlockId: string | null;
+  selectedColumnId: string | null;
+  selectedColumnSectionId: string | null;
 
   // ─── History (Undo/Redo) ───
   past: Project[];
@@ -17,6 +19,11 @@ interface EditorState {
   // ─── UI State ───
   isDirty: boolean;
   lastSavedAt: string | null;
+  // ─── Inline Editing ───
+  isInlineEditing: boolean;
+
+  // ─── Reorder ───
+  reorderingSectionId: string | null;
 
   // ─── Actions: Project ───
   setCurrentProject: (project: Project) => void;
@@ -25,16 +32,36 @@ interface EditorState {
   setCurrentPage: (pageId: string) => void;
 
   // ─── Actions: Section ───
-  addSection: (section: Section) => void;
+  addSection: (section: Section, order?: number) => void;
   removeSection: (sectionId: string) => void;
   updateSection: (sectionId: string, updater: (section: Section) => Section) => void;
   reorderSections: (fromIndex: number, toIndex: number) => void;
 
   // ─── Actions: Block ───
-  addBlock: (sectionId: string, block: Block) => void;
+  addBlock: (sectionId: string, block: Block, order?: number) => void;
   removeBlock: (sectionId: string, blockId: string) => void;
   updateBlock: (blockId: string, updater: (block: Block) => Block) => void;
+
+  addBlockToColumn: (sectionId: string, columnId: string, block: Block, order: number) => void;
+  selectColumn: (columnId: string | null, sectionId?: string) => void;
+  removeColumn: (sectionId: string, columnId: string) => void;
+
+  // ─── Actions: Inline Editing ───
+  setInlineEditing: (editing: boolean) => void;
+
+  // ─── Actions: Reorder ───
   reorderBlocks: (sectionId: string, fromIndex: number, toIndex: number) => void;
+  reorderColumns: (sectionId: string, columnsBlockId: string, fromIndex: number, toIndex: number) => void;
+  reorderBlockInColumn: (sectionId: string, columnId: string, fromIndex: number, toIndex: number) => void;
+  moveBlockBetweenColumns: (
+    sectionId: string,
+    fromColumnId: string,
+    toColumnId: string,
+    blockId: string,
+    toIndex: number,
+  ) => void;
+
+  setReorderingSection: (sectionId: string | null) => void;
 
   // ─── Actions: Selection ───
   selectSection: (sectionId: string | null) => void;
@@ -60,6 +87,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   currentPageId: null,
   selectedSectionId: null,
   selectedBlockId: null,
+  selectedColumnId: null,
+  selectedColumnSectionId: null,
+  reorderingSectionId: null,
+  isInlineEditing: false,
   past: [],
   future: [],
   isDirty: false,
@@ -81,6 +112,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ currentPageId: pageId });
   },
 
+  // ─── Editing ───
+  setInlineEditing: (editing) => set({ isInlineEditing: editing }),
+
+  // ─── Reorder ───
+  setReorderingSection: (sectionId) => set({ reorderingSectionId: sectionId }),
+
   // ─── History Helpers ───
   pushToHistory: () => {
     const { currentProject } = get();
@@ -93,19 +130,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   // ─── Section ───
-  addSection: (section) => {
-    const { currentProject, currentPageId, pushToHistory } = get();
+  addSection: (section, order) => {
+    const { pushToHistory, currentProject, currentPageId } = get();
     if (!currentProject || !currentPageId) return;
-
     pushToHistory();
 
     set((state) => {
       const updatedPages = state.currentProject!.pages.map((page) => {
         if (page.id !== currentPageId) return page;
-        return {
-          ...page,
-          sections: [...page.sections, section],
-        };
+        const sections = [...page.sections];
+        const insertIndex = order !== undefined && order >= 0 ? order : sections.length;
+        sections.splice(insertIndex, 0, section);
+        return { ...page, sections };
       });
       return {
         currentProject: { ...state.currentProject!, pages: updatedPages },
@@ -173,10 +209,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  clearSelection: () => set({ selectedSectionId: null, selectedBlockId: null }),
+  clearSelection: () =>
+    set({
+      selectedSectionId: null,
+      selectedBlockId: null,
+      selectedColumnId: null,
+      selectedColumnSectionId: null,
+    }),
 
   // ─── Block ───
-  addBlock: (sectionId, block) => {
+  addBlock: (sectionId, block, order?: number) => {
     const { pushToHistory } = get();
     pushToHistory();
 
@@ -185,7 +227,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ...page,
         sections: page.sections.map((s) => {
           if (s.id !== sectionId) return s;
-          return { ...s, blocks: [...s.blocks, block] };
+          const blocks = [...s.blocks];
+          const insertIndex = order !== undefined && order >= 0 ? order : blocks.length;
+          blocks.splice(insertIndex, 0, block);
+          return { ...s, blocks };
+        }),
+      }));
+      return {
+        currentProject: { ...state.currentProject!, pages: updatedPages },
+        isDirty: true,
+      };
+    });
+  },
+
+  addBlockToColumn: (sectionId, columnId, block, order) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => {
+      const updatedPages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => {
+              if (b.type !== "columns" || !("children" in b)) return b;
+              const colsBlock = b as ColumnsBlock;
+              return {
+                ...colsBlock,
+                children: colsBlock.children.map((col) => {
+                  if (col.id !== columnId) return col;
+                  const blocks = [...col.blocks];
+                  const insertIndex = order >= 0 ? order : blocks.length;
+                  blocks.splice(insertIndex, 0, block);
+                  return { ...col, blocks };
+                }),
+              };
+            }),
+          };
         }),
       }));
       return {
@@ -204,7 +283,29 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ...page,
         sections: page.sections.map((s) => {
           if (s.id !== sectionId) return s;
-          return { ...s, blocks: s.blocks.filter((b) => b.id !== blockId) };
+
+          // Lọc block trực tiếp trong section
+          const updatedBlocks = s.blocks
+            .filter((b) => {
+              if (b.id === blockId) return false;
+              return true;
+            })
+            .map((b) => {
+              // Nếu là columns, lọc trong children
+              if (b.type === "columns" && "children" in b) {
+                const colsBlock = b as ColumnsBlock;
+                return {
+                  ...colsBlock,
+                  children: colsBlock.children.map((col) => ({
+                    ...col,
+                    blocks: col.blocks.filter((childBlock) => childBlock.id !== blockId),
+                  })),
+                };
+              }
+              return b;
+            });
+
+          return { ...s, blocks: updatedBlocks };
         }),
       }));
       return {
@@ -221,11 +322,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => {
       const updatedPages = state.currentProject!.pages.map((page) => ({
         ...page,
-        sections: page.sections.map((s) => ({
-          ...s,
-          blocks: s.blocks.map((b) => {
-            if (b.id !== blockId) return b;
-            return updater(b);
+        sections: page.sections.map((section) => ({
+          ...section,
+          blocks: section.blocks.map((b) => {
+            // Nếu chính block này được chọn
+            if (b.id === blockId) return updater(b);
+
+            // Nếu là columns, tìm trong children
+            if (b.type === "columns" && "children" in b) {
+              const colsBlock = b as ColumnsBlock;
+              return {
+                ...colsBlock,
+                children: colsBlock.children.map((col) => ({
+                  ...col,
+                  blocks: col.blocks.map((childBlock) => {
+                    if (childBlock.id === blockId) return updater(childBlock);
+                    return childBlock;
+                  }),
+                })),
+              };
+            }
+
+            return b;
           }),
         })),
       }));
@@ -261,13 +379,187 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  // ─── Column ───
+  reorderBlockInColumn: (sectionId, columnId, fromIndex, toIndex) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: state.currentProject!.pages.map((page) => ({
+          ...page,
+          sections: page.sections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              blocks: section.blocks.map((b) => {
+                if (b.type !== "columns" || !("children" in b)) return b;
+                const cols = b as ColumnsBlock;
+                return {
+                  ...cols,
+                  children: cols.children.map((col) => {
+                    if (col.id !== columnId) return col;
+                    const blocks = [...col.blocks];
+                    const [moved] = blocks.splice(fromIndex, 1);
+                    blocks.splice(toIndex, 0, moved);
+                    return { ...col, blocks };
+                  }),
+                };
+              }),
+            };
+          }),
+        })),
+      },
+      isDirty: true,
+    }));
+  },
+
+  moveBlockBetweenColumns: (sectionId, fromColumnId, toColumnId, blockId, toIndex) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => {
+      let blockToMove: Block | null = null;
+      const pages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => {
+              if (b.type !== "columns" || !("children" in b)) return b;
+              const cols = b as ColumnsBlock;
+              return {
+                ...cols,
+                children: cols.children.map((col) => {
+                  if (col.id === fromColumnId) {
+                    // Lấy block ra khỏi source column
+                    const idx = col.blocks.findIndex((bl) => bl.id === blockId);
+                    if (idx !== -1) {
+                      blockToMove = col.blocks[idx];
+                      return { ...col, blocks: col.blocks.filter((bl) => bl.id !== blockId) };
+                    }
+                  }
+                  return col;
+                }),
+              };
+            }),
+          };
+        }),
+      }));
+
+      if (!blockToMove) return {};
+
+      // Insert vào target column
+      const finalPages = pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => {
+              if (b.type !== "columns" || !("children" in b)) return b;
+              const cols = b as ColumnsBlock;
+              return {
+                ...cols,
+                children: cols.children.map((col) => {
+                  if (col.id !== toColumnId) return col;
+                  const blocks = [...col.blocks];
+                  blocks.splice(toIndex, 0, blockToMove!);
+                  return { ...col, blocks };
+                }),
+              };
+            }),
+          };
+        }),
+      }));
+
+      return {
+        currentProject: { ...state.currentProject!, pages: finalPages },
+        isDirty: true,
+      };
+    });
+  },
+
+  reorderColumns: (sectionId, columnsBlockId, fromIndex, toIndex) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: state.currentProject!.pages.map((page) => ({
+          ...page,
+          sections: page.sections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              blocks: section.blocks.map((b) => {
+                if (b.id !== columnsBlockId || b.type !== "columns") return b;
+                const cols = b as ColumnsBlock;
+                const children = [...cols.children];
+                const [moved] = children.splice(fromIndex, 1);
+                children.splice(toIndex, 0, moved);
+                return { ...cols, children };
+              }),
+            };
+          }),
+        })),
+      },
+      isDirty: true,
+    }));
+  },
+
+  removeColumn: (sectionId, columnId) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => {
+      const updatedPages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => {
+              if (b.type !== "columns" || !("children" in b)) return b;
+              const colsBlock = b as ColumnsBlock;
+              return {
+                ...colsBlock,
+                children: colsBlock.children.filter((col) => col.id !== columnId),
+              };
+            }),
+          };
+        }),
+      }));
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
+    });
+  },
+
   // ─── Selection ───
   selectSection: (sectionId) => {
-    set({ selectedSectionId: sectionId, selectedBlockId: null });
+    set({
+      selectedSectionId: sectionId,
+      selectedBlockId: null,
+      selectedColumnId: null,
+      selectedColumnSectionId: null,
+      reorderingSectionId: null,
+    });
   },
 
   selectBlock: (blockId) => {
-    set({ selectedBlockId: blockId, selectedSectionId: null });
+    set({
+      selectedBlockId: blockId,
+      selectedSectionId: null,
+      selectedColumnId: null,
+      selectedColumnSectionId: null,
+    });
+  },
+
+  selectColumn: (columnId, sectionId) => {
+    set({
+      selectedColumnId: columnId,
+      selectedColumnSectionId: sectionId ?? null,
+      selectedBlockId: null,
+      selectedSectionId: null,
+    });
   },
 
   // ─── Undo / Redo ───

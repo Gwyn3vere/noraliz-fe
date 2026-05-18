@@ -1,9 +1,174 @@
+import { useCallback } from "react";
 import { builderStyles as styles } from "./Builder.styles";
+import {
+  CirclesFourIcon,
+  SlidersIcon,
+  CaretRightIcon,
+  CubeFocusIcon,
+  CodeIcon,
+  CopySimpleIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
+import { usePrimitiveBlocks } from "@/components/hooks/usePrimitiveBlocks";
+import { useSelectedElement } from "@/components/hooks/useSelectedElement";
+import type { Block } from "@/types";
+import { cn } from "@/lib/utils";
+import Property from "./Property";
+import Typography from "./Typography";
+import Content from "./Content";
+import { Button } from "@/components/ui/button";
+import { useEditorStore } from "@/stores/editorStore";
+import type { ColumnsBlock } from "@/types";
 
 export default function RighPanel() {
+  const { selectedBlock, selectedColumnSectionId, selectedColumn, selectionType } = useSelectedElement();
+
+  const { blocks: primitiveBlocks } = usePrimitiveBlocks();
+
+  const removeBlock = useEditorStore((s) => s.removeBlock);
+  const removeColumn = useEditorStore((s) => s.removeColumn);
+
+  const getBlockDisplayName = useCallback(
+    (block: Block) => primitiveBlocks.find((b) => b.type === block.type)?.name ?? block.type,
+    [primitiveBlocks],
+  );
+
+  const handleRemove = useCallback(() => {
+    if (!selectionType) return;
+
+    const currentPage = useEditorStore.getState().getCurrentPage();
+    if (!currentPage) return;
+
+    if (selectionType === "block" && selectedBlock) {
+      for (const section of currentPage.sections) {
+        if (section.blocks.some((b) => b.id === selectedBlock.id)) {
+          removeBlock(section.id, selectedBlock.id);
+          return;
+        }
+
+        for (const block of section.blocks) {
+          if (block.type === "columns") {
+            const colsBlock = block as ColumnsBlock;
+            for (const col of colsBlock.children) {
+              if (col.blocks.some((b) => b.id === selectedBlock.id)) {
+                removeBlock(section.id, selectedBlock.id);
+                return;
+              }
+            }
+          }
+        }
+      }
+    } else if (selectionType === "column" && selectedColumn && selectedColumnSectionId) {
+      removeColumn?.(selectedColumnSectionId, selectedColumn.id);
+    }
+    // Section không làm gì ở đây
+  }, [selectionType, selectedBlock, selectedColumn, selectedColumnSectionId, removeBlock, removeColumn]);
+
+  const displayName =
+    selectionType === "block" && selectedBlock
+      ? getBlockDisplayName(selectedBlock)
+      : selectionType === "section"
+        ? "Section"
+        : "Column";
+
+  const canRemove = selectionType === "block" || selectionType === "column";
+
   return (
     <div className="relative z-1">
-      <aside className={styles.lPanelContainer}></aside>
+      <aside className={styles.lPanelContainer}>
+        <div className="p-[20px] border-b border-[var(--color-dark)]/10">
+          <div className="flex items-center gap-[5px]">
+            <CirclesFourIcon size={20} weight="fill" />
+            <strong className="text-[13px] uppercase">{displayName}</strong>
+          </div>
+        </div>
+
+        {selectionType ? (
+          <div
+            spellCheck={false}
+            className="flex-1 overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <Property title="Content" defaultOpen>
+              <Content
+                key={selectedBlock?.id || selectedColumn?.id || "no-selection"}
+                block={selectedBlock}
+                column={selectedColumn}
+              />
+            </Property>
+
+            <div className="flex items-center justify-between px-[20px] pt-[20px]">
+              <div className="flex items-center w-auto h-auto bg-[var(--color-dark)] rounded-[10px]">
+                <Button className="bg-[var(--color-primary)] !rounded-[10px] !w-[40px] !h-[40px] border-3 border-[var(--color-dark)]">
+                  <CubeFocusIcon size={20} weight="fill" className="text-white" />
+                </Button>
+                <Button className="bg-transparent !w-[40px] !h-[40px] border-2 border-transparent">
+                  <CodeIcon size={20} weight="bold" className="text-white" />
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-[5px]">
+                <Button className="bg-[var(--color-dark)] !rounded-[10px] !w-[40px] !h-[40px] hover:bg-[var(--color-primary)] transition-all">
+                  <CopySimpleIcon size={20} weight="fill" className="text-white" />
+                </Button>
+                {canRemove && (
+                  <Button
+                    onClick={handleRemove}
+                    className="bg-[var(--color-dark)] !rounded-[10px] !w-[40px] !h-[40px] hover:bg-red-500 transition-all"
+                  >
+                    <TrashIcon size={20} weight="fill" className="text-white" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <Property title="Typography">
+              <Typography />
+            </Property>
+            <Property title="Spacing">
+              <Typography />
+            </Property>
+            <Property title="Size">
+              <Typography />
+            </Property>
+            <Property title="Position">
+              <Typography />
+            </Property>
+            <Property title="Background">
+              <Typography />
+            </Property>
+            <Property title="Border">
+              <Typography />
+            </Property>
+            <Property title="Effects">
+              <Typography />
+            </Property>
+          </div>
+        ) : (
+          <>
+            {["Content", "Typography", "Spacing", "Size", "Position", "Background", "Border", "Effects"].map(
+              (title) => (
+                <div key={title} className="border-b border-[var(--color-dark)]/10 p-[20px] flex items-center gap-2">
+                  <CaretRightIcon size={16} weight="fill" className="text-[var(--color-dark)]/20" />
+                  <strong className="text-[14px] text-[var(--color-dark)]/20">{title}</strong>
+                </div>
+              ),
+            )}
+          </>
+        )}
+      </aside>
+
+      {!selectionType && (
+        <aside className={cn("absolute z-40 top-0 right-0 w-[260px] h-screen", "bg-[var(--color-light)]/50")}>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-[10px]">
+            <div className="w-[30px] h-[30px] flex items-center justify-center rounded-full bg-[var(--color-primary)]/20">
+              <SlidersIcon size={20} weight="fill" className="text-[var(--color-primary)]" />
+            </div>
+            <div className="text-[14px] text-[var(--color-dark)]/70 w-[180px] text-center">
+              Select an element to edit its properties.
+            </div>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
