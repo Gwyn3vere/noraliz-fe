@@ -1,5 +1,4 @@
-import React, { useCallback } from "react";
-import { useEditorStore } from "@/stores/editorStore";
+import React from "react";
 import type { Block, ColumnBlock } from "@/types";
 import { Label } from "@/components/ui/label";
 import TextContent from "./Content/TextContent";
@@ -26,23 +25,23 @@ function Content({ block, column }: ContentProps) {
     case "image":
       return <ImageContent block={block} />;
     case "video":
-      return <VideoContent block={block} />;
+      return <VideoContent />;
     case "icon":
-      return <IconContent block={block} />;
+      return <IconContent />;
     case "button":
       return <ButtonContent block={block} />;
     case "form":
-      return <FormContent block={block} />;
+      return <FormContent />;
     case "divider":
-      return <DividerContent block={block} />;
+      return <DividerContent />;
     case "spacer":
-      return <SpacerContent block={block} />;
+      return <SpacerContent />;
     case "columns":
       return <ColumnsContent block={block} />;
     case "map":
-      return <MapContent block={block} />;
+      return <MapContent />;
     case "social":
-      return <SocialContent block={block} />;
+      return <SocialContent />;
     default:
       return (
         <div className="text-[12px] text-[var(--color-dark)]/40 text-center py-4">
@@ -50,22 +49,6 @@ function Content({ block, column }: ContentProps) {
         </div>
       );
   }
-}
-
-// ─── Helper: update block props ──────────────────────────────────────────────
-
-function useBlockUpdater(blockId: string) {
-  const updateBlock = useEditorStore((s) => s.updateBlock);
-
-  return useCallback(
-    (newProps: Record<string, unknown>) => {
-      updateBlock(blockId, (block) => ({
-        ...block,
-        props: { ...(block as any).props, ...newProps },
-      }));
-    },
-    [blockId, updateBlock],
-  );
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
@@ -83,13 +66,8 @@ function ContentWrapper({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-[14px]">{children}</div>;
 }
 
-const ColumnContent = React.memo(function ColumnContent({ column }: { column: ColumnBlock }) {
-  const updateBlock = useEditorStore((s) => s.updateBlock);
-
-  // Column không có updateBlock trực tiếp vì không phải Block
-  // Cần updateColumnProps action trong store — tạm thời để placeholder
-  // TODO: thêm updateColumn action vào store
-
+const ColumnContent = React.memo(function ColumnContent({ column: _column }: { column: ColumnBlock }) {
+  // TODO: implement column editing later
   return (
     <ContentWrapper>
       <FieldRow label="Direction">
@@ -111,26 +89,28 @@ const ColumnContent = React.memo(function ColumnContent({ column }: { column: Co
     </ContentWrapper>
   );
 });
-const VideoContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+
+// Placeholder components
+const VideoContent = React.memo(function VideoContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Video settings coming soon</div>;
 });
-const IconContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const IconContent = React.memo(function IconContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Icon settings coming soon</div>;
 });
-const FormContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const FormContent = React.memo(function FormContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Form settings coming soon</div>;
 });
-const DividerContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const DividerContent = React.memo(function DividerContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Divider settings coming soon</div>;
 });
-const SpacerContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const SpacerContent = React.memo(function SpacerContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Spacer settings coming soon</div>;
 });
-const MapContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const MapContent = React.memo(function MapContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Map settings coming soon</div>;
 });
-const SocialContent = React.memo(function TextContent({ block }: { block: Block }) {
-  return <div></div>;
+const SocialContent = React.memo(function SocialContent() {
+  return <div className="text-[12px] text-[var(--color-dark)]/30 text-center py-4">Social settings coming soon</div>;
 });
 
 export default React.memo(Content);

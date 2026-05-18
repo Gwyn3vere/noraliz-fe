@@ -138,7 +138,7 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveDragItem(event.active.id as string);
-    setActiveDragKind(event.active.data.current?.kind ?? null);
+    setActiveDragKind((event.active.data.current as any)?.kind ?? null);
     setActiveDragData(event.active.data.current ?? null);
   }, []);
 
@@ -150,16 +150,19 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       const { active, over } = event;
       if (!over) return;
 
-      const blockType: string = active.data.current?.blockType;
-      const blockId: string = active.data.current?.blockId;
-      const kind: string = active.data.current?.kind;
+      const activeData = (active.data.current as any) || {};
+      const overData = (over.data.current as any) || {};
+
+      const blockType: string = activeData.blockType;
+      const blockId: string = activeData.blockId;
+      const kind: string = activeData.kind;
 
       const { dropX, dropY } = getDropPoint(event);
       const store = useEditorStore.getState();
 
       // ── Reorder SECTION ──
       if (kind === "reorder-section") {
-        const { sectionId } = active.data.current;
+        const { sectionId } = activeData;
         const currentPage = store.getCurrentPage();
         if (!currentPage) return;
 
@@ -178,9 +181,9 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       }
 
       if (kind === "reorder-column-block") {
-        const { blockId: reorderBlockId, sectionId: sourceSectionId, columnId: sourceColumnId } = active.data.current;
-        const targetColumnId = over.data.current?.columnId;
-        const targetSectionId = over.data.current?.sectionId;
+        const { blockId: reorderBlockId, sectionId: sourceSectionId, columnId: sourceColumnId } = activeData;
+        const targetColumnId = overData.columnId;
+        const targetSectionId = overData.sectionId;
 
         if (!targetColumnId || !targetSectionId) return;
 
@@ -219,9 +222,8 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
         const { currentPageId } = store;
         if (!currentPageId) return;
 
-        // Nếu drop vào DropZone → dùng order từ data
-        const dropZoneOrder = over.data.current?.order;
-        const isDropZone = over.data.current?.pageId !== undefined;
+        const dropZoneOrder = overData.order;
+        const isDropZone = overData.pageId !== undefined;
 
         const order = isDropZone ? dropZoneOrder : getSectionOrderFromPointer(currentPageId, dropY);
         const newSection: Section = {
@@ -236,16 +238,16 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       }
 
       // ── Drop BLOCK ────────────────────────────────────────────────────────
-      const targetSectionId = over.data.current?.sectionId;
+      const targetSectionId = overData.sectionId;
       if (!targetSectionId) {
-        if (over.data.current?.pageId) {
+        if (overData.pageId) {
           console.warn("Cannot drop block outside a section");
         }
         return;
       }
 
       const blockApi = blockId ? getBlockById(blockId) : null;
-      const variant = active.data.current?.variant;
+      const variant = activeData.variant;
 
       const defaultProps = blockApi
         ? typeof blockApi.defaultProps === "string"
@@ -253,8 +255,8 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
           : blockApi.defaultProps
         : getDefaultPropsForType(blockType, variant);
 
-      const isColumn: boolean = over.data.current?.isColumn ?? false;
-      const columnId: string | undefined = over.data.current?.columnId;
+      const isColumn: boolean = overData.isColumn ?? false;
+      const columnId: string | undefined = overData.columnId;
 
       if (isColumn && columnId) {
         if (blockType === "columns") return;
@@ -276,7 +278,10 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
     const { active, over } = event;
     if (!over) return;
 
-    const kind = active.data.current?.kind;
+    const activeData = (active.data.current as any) || {};
+    const overData = (over.data.current as any) || {};
+
+    const kind = activeData.kind;
     if (kind !== "reorder-block" && kind !== "reorder-column-block" && kind !== "reorder-column") return;
 
     const store = useEditorStore.getState();
@@ -284,12 +289,12 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
     if (!currentPage) return;
 
     if (kind === "reorder-column") {
-      const { columnId: activeColId, columnsBlockId, sectionId } = active.data.current;
-      const overColId = over.data.current?.columnId;
-      const overColumnsBlockId = over.data.current?.columnsBlockId;
+      const { columnId: activeColId, columnsBlockId, sectionId } = activeData;
+      const overColId = overData.columnId;
+      const overColumnsBlockId = overData.columnsBlockId;
 
       if (!overColId || overColId === activeColId) return;
-      if (columnsBlockId !== overColumnsBlockId) return; // chỉ swap trong cùng columns block
+      if (columnsBlockId !== overColumnsBlockId) return;
 
       const section = currentPage.sections.find((s) => s.id === sectionId);
       const colsBlock = section?.blocks.find((b) => b.id === columnsBlockId) as ColumnsBlock | undefined;
@@ -303,15 +308,13 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       return;
     }
 
-    const activeBlockId = active.data.current?.blockId;
-    const overBlockId = over.data.current?.blockId;
-    const overIsColumn = over.data.current?.isColumn === true;
-
-    // if (!overBlockId || activeBlockId === overBlockId) return;
+    const activeBlockId = activeData.blockId;
+    const overBlockId = overData.blockId;
+    const overIsColumn = overData.isColumn === true;
 
     if (kind === "reorder-block") {
-      const sourceSectionId = active.data.current?.sectionId;
-      const targetSectionId = over.data.current?.sectionId;
+      const sourceSectionId = activeData.sectionId;
+      const targetSectionId = overData.sectionId;
       if (!sourceSectionId || sourceSectionId !== targetSectionId) return;
       if (!overBlockId || activeBlockId === overBlockId) return;
 
@@ -327,13 +330,12 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
     }
 
     if (kind === "reorder-column-block") {
-      const sourceColumnId = active.data.current?.columnId;
-      const targetColumnId = over.data.current?.columnId;
-      const sourceSectionId = active.data.current?.sectionId;
+      const sourceColumnId = activeData.columnId;
+      const targetColumnId = overData.columnId;
+      const sourceSectionId = activeData.sectionId;
       if (!sourceColumnId || !targetColumnId || !sourceSectionId) return;
 
       if (sourceColumnId === targetColumnId) {
-        // Swap trong cùng column
         if (!overBlockId || activeBlockId === overBlockId) return;
 
         const section = currentPage.sections.find((s) => s.id === sourceSectionId);
@@ -349,12 +351,8 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
 
         store.reorderBlockInColumn(sourceSectionId, sourceColumnId, fromIndex, toIndex);
       } else {
-        // Move sang column khác — swap với block đang hover
         const toIndex = (() => {
-          if (overIsColumn) {
-            // Drop vào column rỗng → thêm vào cuối (index 0)
-            return 0;
-          }
+          if (overIsColumn) return 0;
           if (!overBlockId) return 0;
 
           const section = currentPage.sections.find((s) => s.id === sourceSectionId);

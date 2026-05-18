@@ -66,12 +66,11 @@ function Menu({ category, onClose, onEnterMenu, onLeaveMenu }: MenuProps) {
 
   const groupedBlocks = blocks.reduce(
     (acc, block) => {
-      if (!acc[block.type]) {
-        acc[block.type] = [];
+      const key = block.type || "unknown";
+      if (!acc[key]) {
+        acc[key] = [];
       }
-
-      acc[block.type].push(block);
-
+      acc[key].push(block);
       return acc;
     },
     {} as Record<string, typeof blocks>,
