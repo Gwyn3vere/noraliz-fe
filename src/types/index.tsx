@@ -91,6 +91,7 @@ export interface TextBlock extends BaseBlock {
 export interface HeadingBlock extends BaseBlock {
   type: "heading";
   props: {
+    styles: {};
     content: string;
     level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   };
@@ -117,6 +118,7 @@ export interface ButtonBlock extends BaseBlock {
 export interface ColumnsBlock extends BaseBlock {
   type: "columns";
   props: {
+    styles: {};
     count: 2 | 3;
     gap: string;
   };

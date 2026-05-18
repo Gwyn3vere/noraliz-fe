@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
-import type { Block, Section, ColumnsBlock } from "@/types";
+import type { Block, Section, ColumnsBlock, ButtonBlock } from "@/types";
 import { images } from "@/assets/images";
 import { FloatingSectionToolbar } from "./FloatingSectionToolbar";
 import { useSectionDrop } from "@/components/hooks/useSectionDrop";
@@ -11,6 +11,7 @@ import { useBlockReorder } from "@/components/hooks/useBlockReorder";
 import { useColumnReorder } from "@/components/hooks/useColumnReorder";
 import { useDroppable, useDndContext } from "@dnd-kit/core";
 import { DropZone } from "./DropZone";
+import { useInlineEdit } from "@/components/hooks/useInlineEdit";
 
 export function CanvasRenderer() {
   const currentProject = useEditorStore((state) => state.currentProject);
@@ -57,7 +58,7 @@ export function CanvasRenderer() {
   }
 
   return (
-    <div data-page-id={currentPage.id} className="h-[calc(820px-86px)]">
+    <div data-page-id={currentPage.id} className="min-h-[calc(820px-86px)]">
       <DropZone id={`page-drop-0`} data={{ pageId: currentPage.id, order: 0 }} direction="vertical" />
       {currentPage.sections.map((section, index) => (
         <React.Fragment key={section.id}>
@@ -77,6 +78,7 @@ function SectionRenderer({ section }: { section: Section }) {
   const selectedSectionId = useEditorStore((state) => state.selectedSectionId);
   const selectSection = useEditorStore((state) => state.selectSection);
   const isSelected = selectedSectionId === section.id;
+  const [isHovered, setIsHovered] = useState(false);
 
   const { setNodeRef, isOver } = useSectionDrop(section.id);
 
@@ -84,9 +86,13 @@ function SectionRenderer({ section }: { section: Section }) {
     ...(section.props as any)?.styles,
   };
 
-  const selectionClass = isSelected
-    ? "border-[var(--color-primary)] before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none"
-    : "border-transparent hover:border-[var(--color-primary)]";
+  const showOutline = isHovered || isSelected;
+  const editorClasses = cn(
+    "relative p-4 transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -98,9 +104,9 @@ function SectionRenderer({ section }: { section: Section }) {
       ref={setNodeRef}
       id={section.id}
       data-section-id={section.id}
-      className={`relative border-2 border-dashed p-4 transition-all ${selectionClass} ${
-        isOver ? "bg-[var(--color-primary)]/10 border-[var(--color-primary)]" : ""
-      }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={editorClasses}
       style={{
         ...sectionStyles,
         minHeight: section.blocks.length === 0 ? "120px" : undefined,
@@ -117,7 +123,19 @@ function SectionRenderer({ section }: { section: Section }) {
   );
 }
 
-function ColumnRenderer({ column, sectionId, columnsBlockId, index, total }) {
+function ColumnRenderer({
+  column,
+  sectionId,
+  columnsBlockId,
+  index,
+  total,
+}: {
+  column: ColumnsBlock["children"][0];
+  sectionId: string;
+  columnsBlockId: string;
+  index?: number;
+  total?: number;
+}) {
   const { setNodeRef, isOver } = useColumnDrop(column.id, sectionId, columnsBlockId);
   const reorderingSectionId = useEditorStore((s) => s.reorderingSectionId);
   const isReorderMode = reorderingSectionId === sectionId;
@@ -131,8 +149,8 @@ function ColumnRenderer({ column, sectionId, columnsBlockId, index, total }) {
   const selectedColumnId = useEditorStore((state) => state.selectedColumnId);
   const selectColumn = useEditorStore((state) => state.selectColumn);
   const isSelected = selectedColumnId === column.id;
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Lấy activeDragItem từ DnD context để check type đang kéo
   const { active } = useDndContext();
   const isDraggingColumns = active?.data.current?.blockType === "columns";
 
@@ -140,9 +158,13 @@ function ColumnRenderer({ column, sectionId, columnsBlockId, index, total }) {
     ...(column as any).props?.styles,
   };
 
-  const selectionClass = isSelected
-    ? "border-[var(--color-primary)] before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none"
-    : "border-transparent hover:border-[var(--color-primary)]";
+  const showOutline = isHovered || isSelected;
+  const editorClasses = cn(
+    "relative flex-1 p-4 transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -158,6 +180,8 @@ function ColumnRenderer({ column, sectionId, columnsBlockId, index, total }) {
       data-column-id={column.id}
       data-columns-block-id={columnsBlockId}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         ...columnStyles,
         minHeight: "120px",
@@ -165,9 +189,7 @@ function ColumnRenderer({ column, sectionId, columnsBlockId, index, total }) {
         opacity: isDragging ? 0.4 : 1,
         cursor: isReorderMode ? "grab" : undefined,
       }}
-      className={`relative border-2 border-dashed flex-1 p-4 transition-all ${selectionClass} ${
-        isOver ? "bg-[var(--color-primary)]/10 border-[var(--color-primary)]" : ""
-      }`}
+      className={editorClasses}
       {...(isReorderMode ? listeners : {})}
       {...(isReorderMode ? attributes : {})}
     >
@@ -197,11 +219,16 @@ function BlockRenderer({ block, sectionId, columnId }: { block: Block; sectionId
   const selectedBlockId = useEditorStore((state) => state.selectedBlockId);
   const selectBlock = useEditorStore((state) => state.selectBlock);
   const reorderingSectionId = useEditorStore((state) => state.reorderingSectionId);
-  const isReorderMode = reorderingSectionId === sectionId;
 
+  const isReorderMode = reorderingSectionId === sectionId;
   const isSelected = selectedBlockId === block.id;
 
-  const { setNodeRef, isOver } = useBlockDrop(block.id, sectionId, columnId);
+  const { isEditing, contentRef, handleDoubleClick, handleBlur, handleKeyDown } = useInlineEdit(block);
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  const { setNodeRef: setDropRef, isOver } = useBlockDrop(block.id, sectionId, columnId);
+
   const {
     listeners,
     attributes,
@@ -209,273 +236,352 @@ function BlockRenderer({ block, sectionId, columnId }: { block: Block; sectionId
     isDragging,
   } = useBlockReorder(block.id, sectionId, columnId, !isReorderMode);
 
+  const combinedRef = useCallback(
+    (node: HTMLElement | null) => {
+      setDropRef(node);
+
+      if (isReorderMode) {
+        setDragRef(node);
+      }
+    },
+    [setDropRef, setDragRef, isReorderMode],
+  );
+
   const blockStyles: React.CSSProperties = {
     ...(block as any).props?.styles,
+    opacity: isDragging ? 0.4 : 1,
   };
 
-  const selectionClass = isSelected
-    ? "border-[var(--color-primary)] before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none"
-    : "border-transparent hover:border-[var(--color-primary)]";
+  const userClasses = (block as any).classes?.join(" ") || "";
 
-  const dropEffect = isOver ? "bg-[var(--color-primary)]/10" : "";
+  const showOutline = isHovered || isSelected;
+
+  const editorClasses = cn(
+    "relative cursor-pointer transition-all outline outline-2 outline-dashed",
+    showOutline ? "outline-[var(--color-primary)]" : "outline-transparent",
+    isSelected ? "before:absolute before:inset-0 before:bg-[var(--color-primary)]/5 before:pointer-events-none" : "",
+    isOver ? "bg-[var(--color-primary)]/10" : "",
+    isReorderMode ? "cursor-grab active:cursor-grabbing ring-2 ring-[var(--color-primary)]/30" : "",
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     selectBlock(block.id);
   };
 
-  const renderBlock = () => {
-    switch (block.type) {
-      // ── Typography ──
-      case "text":
-        return (
-          <p
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed p-2 cursor-pointer transition-all ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            {(block as any).props?.content || "Text content"}
-          </p>
-        );
-
-      case "heading": {
-        const HeadingTag = (block as any).props?.level || "h2";
-        return (
-          <HeadingTag
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed p-2 cursor-pointer transition-all font-bold ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            {(block as any).props?.content || "Heading"}
-          </HeadingTag>
-        );
-      }
-      case "blockquote":
-        return (
-          <blockquote
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed p-2 cursor-pointer transition-all italic ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            {(block as any).props?.content || "Quote"}
-          </blockquote>
-        );
-
-      // ── Media ──
-      case "image":
-        return (
-          <img
-            data-block-id={block.id}
-            src={(block as any).props?.src || "https://placehold.co/600x400"}
-            alt={(block as any).props?.alt || "Image"}
-            className={`relative border-2 border-dashed cursor-pointer transition-all max-w-full h-auto ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          />
-        );
-
-      case "video":
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            <iframe
-              src={(block as any).props?.embedUrl || ""}
-              width={(block as any).props?.width || "100%"}
-              height={(block as any).props?.height || "315"}
-              allowFullScreen
-              className="pointer-events-none"
-            />
-          </div>
-        );
-
-      case "icon":
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all inline-flex ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            <svg width={(block as any).props?.size || 24} height={(block as any).props?.size || 24}>
-              <circle cx="12" cy="12" r="10" fill={(block as any).props?.color || "#000"} />
-            </svg>
-          </div>
-        );
-
-      // ── Interactive ──
-      case "button":
-        return (
-          <button
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all px-4 py-2 rounded-lg text-white ${selectionClass} ${dropEffect}`}
-            style={{
-              backgroundColor: (block as any).props?.variant === "primary" ? "var(--color-primary)" : "transparent",
-              color: (block as any).props?.variant === "primary" ? "#fff" : "var(--color-dark)",
-              ...blockStyles,
-            }}
-            onClick={handleClick}
-          >
-            {(block as any).props?.label || "Button"}
-          </button>
-        );
-
-      case "form":
-        return (
-          <form
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed p-4 cursor-pointer transition-all space-y-2 ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            {((block as any).props?.fields as any[])?.map((field, i) => (
-              <input
-                key={i}
-                type={field.type || "text"}
-                placeholder={field.name || `Field ${i + 1}`}
-                className="w-full px-3 py-2 border rounded"
-                disabled
-              />
-            ))}
-            <button type="button" className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg" disabled>
-              {(block as any).props?.submitLabel || "Submit"}
-            </button>
-          </form>
-        );
-
-      // ── Layout ──
-      case "divider":
-        return (
-          <hr
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass} ${dropEffect}`}
-            style={{
-              borderColor: (block as any).props?.color || "#e5e5e5",
-              borderWidth: (block as any).props?.thickness || 1,
-              ...blockStyles,
-            }}
-            onClick={handleClick}
-          />
-        );
-
-      case "spacer":
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass} ${dropEffect}`}
-            style={{
-              height: (block as any).props?.height || "40px",
-              ...blockStyles,
-            }}
-            onClick={handleClick}
-          />
-        );
-
-      case "columns": {
-        const columnsBlock = block as ColumnsBlock;
-        const gap = columnsBlock.props?.gap || "24px";
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all ${selectionClass} ${dropEffect}`}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              gap: gap,
-              minHeight: "200px", // ← tăng min-height
-              padding: "8px",
-              ...blockStyles,
-            }}
-            onClick={handleClick}
-          >
-            {columnsBlock.children.map((column, index) => (
-              <ColumnRenderer
-                key={column.id}
-                column={column}
-                columnsBlockId={columnsBlock.id}
-                sectionId={sectionId}
-                index={index}
-                total={columnsBlock.children.length}
-              />
-            ))}
-          </div>
-        );
-      }
-
-      // ── Embed ──
-      case "map":
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all w-full h-64 ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            <iframe
-              src={(block as any).props?.embedUrl || "https://maps.google.com/maps?q=Hanoi&output=embed"}
-              width="100%"
-              height="100%"
-              className="pointer-events-none"
-            />
-          </div>
-        );
-
-      case "social":
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all flex gap-2 p-2 ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            {((block as any).props?.links as any[])?.map((link, i) => (
-              <div
-                key={i}
-                className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs"
-                title={link.platform}
-              >
-                {link.platform?.[0]?.toUpperCase() || "?"}
-              </div>
-            )) || "No links"}
-          </div>
-        );
-
-      default:
-        return (
-          <div
-            data-block-id={block.id}
-            className={`relative border-2 border-dashed cursor-pointer transition-all p-2 ${selectionClass} ${dropEffect}`}
-            style={blockStyles}
-            onClick={handleClick}
-          >
-            <p className="text-gray-500 text-sm">{block.type}</p>
-          </div>
-        );
-    }
+  const baseProps = {
+    onClick: handleClick,
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => setIsHovered(false),
   };
 
-  return (
-    <div
-      ref={(node) => {
-        setNodeRef(node);
-        if (isReorderMode) setDragRef(node);
-      }}
-      className={cn(
-        "relative group",
-        isReorderMode && "cursor-grab active:cursor-grabbing ring-2 ring-[var(--color-primary)]/30",
-      )}
-      style={{ opacity: isDragging ? 0.4 : 1 }}
-      onClick={handleClick}
-      {...(isReorderMode ? listeners : {})}
-      {...(isReorderMode ? attributes : {})}
-    >
-      {renderBlock()}
-    </div>
-  );
+  const dragProps = isReorderMode
+    ? {
+        ...listeners,
+        ...attributes,
+      }
+    : {};
+
+  const interactionProps = {
+    ...baseProps,
+    ...dragProps,
+  };
+
+  switch (block.type) {
+    case "text":
+      return (
+        <p
+          ref={(node) => {
+            combinedRef(node);
+            contentRef.current = node;
+          }}
+          data-block-id={block.id}
+          {...interactionProps}
+          contentEditable={isEditing}
+          suppressContentEditableWarning
+          onDoubleClick={handleDoubleClick}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, isEditing && "cursor-text outline-none")}
+        >
+          {(block as any).props?.content || "Text content"}
+        </p>
+      );
+
+    case "heading": {
+      const level = (block as any).props?.level || "h2";
+
+      const HeadingTag = level as React.ElementType;
+
+      const headingSizes: Record<string, string> = {
+        h1: "text-4xl font-extrabold",
+        h2: "text-3xl font-bold",
+        h3: "text-2xl font-bold",
+        h4: "text-xl font-semibold",
+        h5: "text-lg font-semibold",
+        h6: "text-base font-semibold",
+      };
+
+      return (
+        <HeadingTag
+          ref={combinedRef as any}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, headingSizes[level], "leading-tight tracking-tight")}
+        >
+          {(block as any).props?.content || "Heading"}
+        </HeadingTag>
+      );
+    }
+
+    case "blockquote":
+      return (
+        <blockquote
+          ref={combinedRef as React.Ref<HTMLQuoteElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, "italic")}
+        >
+          {(block as any).props?.content || "Quote"}
+        </blockquote>
+      );
+
+    case "image":
+      return (
+        <img
+          ref={combinedRef as React.Ref<HTMLImageElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          src={(block as any).props?.src || "https://placehold.co/600x400"}
+          alt={(block as any).props?.alt || "Image"}
+          className={cn(userClasses, editorClasses, "max-w-full h-auto")}
+          style={{
+            ...blockStyles,
+            objectFit: (block as any).props?.objectFit || "cover",
+          }}
+        />
+      );
+
+    case "video":
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses)}
+        >
+          <iframe
+            src={(block as any).props?.embedUrl || ""}
+            width={(block as any).props?.width || "100%"}
+            height={(block as any).props?.height || "315"}
+            allowFullScreen
+            className="pointer-events-none"
+          />
+        </div>
+      );
+
+    case "icon":
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, "inline-flex")}
+        >
+          <svg width={(block as any).props?.size || 24} height={(block as any).props?.size || 24}>
+            <circle cx="12" cy="12" r="10" fill={(block as any).props?.color || "#000"} />
+          </svg>
+        </div>
+      );
+
+    case "button": {
+      const btnBlock = block as ButtonBlock;
+
+      const rawHref = btnBlock.props?.href;
+
+      const href = typeof rawHref === "string" ? rawHref.trim() : "";
+
+      const label = btnBlock.props?.label || "Button";
+
+      if (href) {
+        return (
+          <a
+            ref={combinedRef as React.Ref<HTMLAnchorElement>}
+            data-block-id={block.id}
+            {...interactionProps}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={blockStyles}
+            className={cn(userClasses, editorClasses)}
+            onClick={(e) => {
+              e.preventDefault();
+              handleClick(e);
+            }}
+          >
+            {label}
+          </a>
+        );
+      }
+
+      return (
+        <button
+          ref={combinedRef as React.Ref<HTMLButtonElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          type="button"
+          style={blockStyles}
+          className={cn(userClasses, editorClasses)}
+        >
+          {label}
+        </button>
+      );
+    }
+
+    case "form":
+      return (
+        <form
+          ref={combinedRef as React.Ref<HTMLFormElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, "space-y-2")}
+        >
+          {((block as any).props?.fields as any[])?.map((field, i) => (
+            <input
+              key={i}
+              type={field.type || "text"}
+              placeholder={field.name || `Field ${i + 1}`}
+              className="w-full px-3 py-2 border rounded"
+              disabled
+            />
+          ))}
+
+          <button type="button" className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg" disabled>
+            {(block as any).props?.submitLabel || "Submit"}
+          </button>
+        </form>
+      );
+
+    case "divider":
+      return (
+        <hr
+          ref={combinedRef as React.Ref<HTMLHRElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
+          style={{
+            borderColor: (block as any).props?.color || "#e5e5e5",
+            borderWidth: (block as any).props?.thickness || 1,
+            ...blockStyles,
+          }}
+        />
+      );
+
+    case "spacer":
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
+          style={{
+            width: (block as any).props?.width || "100%",
+            height: (block as any).props?.height || "40px",
+            ...blockStyles,
+          }}
+        />
+      );
+
+    case "columns": {
+      const columnsBlock = block as ColumnsBlock;
+
+      const gap = columnsBlock.props?.gap || "24px";
+
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          className={cn(userClasses, editorClasses)}
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap,
+            minHeight: "200px",
+            padding: "8px",
+            ...blockStyles,
+          }}
+        >
+          {columnsBlock.children.map((column, index) => (
+            <ColumnRenderer
+              key={column.id}
+              column={column}
+              columnsBlockId={columnsBlock.id}
+              sectionId={sectionId}
+              index={index}
+              total={columnsBlock.children.length}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    case "map":
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, "w-full h-64")}
+        >
+          <iframe
+            src={(block as any).props?.embedUrl || "https://maps.google.com/maps?q=Hanoi&output=embed"}
+            width="100%"
+            height="100%"
+            className="pointer-events-none"
+          />
+        </div>
+      );
+
+    case "social":
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses, "flex gap-2")}
+        >
+          {((block as any).props?.links as any[])?.map((link, i) => (
+            <div
+              key={i}
+              className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs"
+              title={link.platform}
+            >
+              {link.platform?.[0]?.toUpperCase() || "?"}
+            </div>
+          )) || "No links"}
+        </div>
+      );
+
+    default:
+      return (
+        <div
+          ref={combinedRef as React.Ref<HTMLDivElement>}
+          data-block-id={block.id}
+          {...interactionProps}
+          style={blockStyles}
+          className={cn(userClasses, editorClasses)}
+        >
+          <p className="text-gray-500 text-sm">{block.type}</p>
+        </div>
+      );
+  }
 }

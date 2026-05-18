@@ -40,7 +40,8 @@ function Canvas() {
   const isDragging = !!dndContext.active;
   const reorderingSectionId = useEditorStore((state) => state.reorderingSectionId);
 
-  const panDisabled = isDragging || reorderingSectionId !== null;
+  const isInlineEditing = useEditorStore((s) => s.isInlineEditing);
+  const panDisabled = isDragging || reorderingSectionId !== null || isInlineEditing;
 
   const currentPage = useEditorStore((state) => state.getCurrentPage());
 
