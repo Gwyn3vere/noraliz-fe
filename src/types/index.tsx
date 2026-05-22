@@ -24,12 +24,18 @@ export interface ProjectDetail {
   id: string;
   name: string;
   description: string | null;
-  jsonData: any; // Hoặc định nghĩa rõ hơn sau
+  jsonData: any;
   thumbnailUrl: string | null;
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
   pageCount: number;
+}
+
+export interface ProjectPayload {
+  name: string;
+  description?: string;
+  jsonData?: any;
 }
 
 export interface AssetSummary {
@@ -130,6 +136,13 @@ export interface ColumnBlock {
   type: "column";
   order: number;
   blocks: Block[];
+  props?: Record<string, unknown>;
+}
+
+export interface ContainerBlock extends BaseBlock {
+  type: "container";
+  props: { styles: {} };
+  children: Block[];
 }
 
 // Union type cho tất cả các block
@@ -139,6 +152,7 @@ export type Block =
   | ImageBlock
   | ButtonBlock
   | ColumnsBlock
+  | ContainerBlock
   | (BaseBlock & { props?: Record<string, unknown> });
 
 export interface Section {
@@ -183,4 +197,12 @@ export interface PrimitiveBlock {
   defaultProps: Record<string, unknown>;
   schema?: unknown;
   tier: string;
+}
+
+// Renderer
+export interface BlockRendererProps {
+  block: Block;
+  sectionId: string;
+  columnId?: string;
+  containerId?: string;
 }

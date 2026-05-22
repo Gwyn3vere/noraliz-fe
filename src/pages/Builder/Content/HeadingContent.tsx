@@ -11,14 +11,25 @@ function HeadingContent({ block }: { block: Block }) {
   const b = block as HeadingBlock;
   const update = useBlockUpdater(b.id);
 
+  const headingStyles: Record<string, Record<string, string>> = {
+    h1: { fontSize: "36px", fontWeight: "800", lineHeight: "1.2" },
+    h2: { fontSize: "30px", fontWeight: "700", lineHeight: "1.25" },
+    h3: { fontSize: "24px", fontWeight: "700", lineHeight: "1.3" },
+    h4: { fontSize: "20px", fontWeight: "600", lineHeight: "1.35" },
+    h5: { fontSize: "18px", fontWeight: "600", lineHeight: "1.4" },
+    h6: { fontSize: "16px", fontWeight: "600", lineHeight: "1.5" },
+  };
+
   const handleLevelChange = useCallback(
     (val: string) => {
-      const currentStyles = b.props?.styles ?? {};
-      const { fontSize, lineHeight, fontWeight, ...restStyles } = currentStyles as any;
-
+      const { fontSize, lineHeight, fontWeight, ...restStyles } = (b.props?.styles || {}) as any;
+      const newStyle = headingStyles[val] || {};
       update({
         level: val,
-        styles: restStyles,
+        styles: {
+          ...restStyles,
+          ...newStyle,
+        },
       });
     },
     [b.props?.styles, update],

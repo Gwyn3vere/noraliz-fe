@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import type { Project, Page, Section, Block, ColumnsBlock } from "@/types";
+import type { Project, Page, Section, Block, ColumnsBlock, ContainerBlock } from "@/types";
+import { v4 as uuidv4 } from "uuid";
 
 interface EditorState {
   // ─── Core Data ───
@@ -29,6 +30,8 @@ interface EditorState {
   setCurrentProject: (project: Project) => void;
 
   // ─── Actions: Page ───
+  addPage: () => void;
+  removePage: (pageId: string) => void;
   setCurrentPage: (pageId: string) => void;
 
   // ─── Actions: Section ───
@@ -43,6 +46,7 @@ interface EditorState {
   updateBlock: (blockId: string, updater: (block: Block) => Block) => void;
 
   addBlockToColumn: (sectionId: string, columnId: string, block: Block, order: number) => void;
+  addBlockToContainer: (sectionId: string, containerId: string, block: Block, order: number) => void;
   selectColumn: (columnId: string | null, sectionId?: string) => void;
   removeColumn: (sectionId: string, columnId: string) => void;
 
@@ -53,6 +57,7 @@ interface EditorState {
   reorderBlocks: (sectionId: string, fromIndex: number, toIndex: number) => void;
   reorderColumns: (sectionId: string, columnsBlockId: string, fromIndex: number, toIndex: number) => void;
   reorderBlockInColumn: (sectionId: string, columnId: string, fromIndex: number, toIndex: number) => void;
+  reorderBlockInContainer: (sectionId: string, containerId: string, fromIndex: number, toIndex: number) => void;
   moveBlockBetweenColumns: (
     sectionId: string,
     fromColumnId: string,
@@ -110,6 +115,50 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // ─── Page ───
   setCurrentPage: (pageId) => {
     set({ currentPageId: pageId });
+  },
+
+  addPage: () => {
+    const { currentProject, pushToHistory } = get();
+    if (!currentProject) return;
+    pushToHistory();
+
+    const pageCount = currentProject.pages.length;
+    const newPage: Page = {
+      id: `page-${uuidv4()}`,
+      name: `Page ${pageCount + 1}`,
+      slug: `page-${pageCount + 1}`,
+      order: pageCount,
+      sections: [],
+    };
+
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: [...state.currentProject!.pages, newPage],
+      },
+      currentPageId: newPage.id,
+      isDirty: true,
+    }));
+  },
+
+  removePage: (pageId) => {
+    const { currentProject, currentPageId, pushToHistory } = get();
+    if (!currentProject) return;
+
+    const updatedPages = currentProject.pages.filter((p) => p.id !== pageId);
+    if (updatedPages.length === 0) return;
+
+    pushToHistory();
+    const newCurrentPageId = pageId === currentPageId ? updatedPages[0].id : currentPageId;
+
+    set({
+      currentProject: {
+        ...currentProject,
+        pages: updatedPages,
+      },
+      currentPageId: newCurrentPageId,
+      isDirty: true,
+    });
   },
 
   // ─── Editing ───
@@ -274,6 +323,58 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  addBlockToContainer: (sectionId, containerId, block, order) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => {
+      const updatedPages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => {
+              if (b.id !== containerId || b.type !== "container") return b;
+              const container = b as ContainerBlock;
+              const children = [...(container.children || [])];
+              children.splice(order, 0, block);
+              return { ...container, children };
+            }),
+          };
+        }),
+      }));
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
+    });
+  },
+
+  reorderBlockInContainer: (sectionId, containerId, fromIndex, toIndex) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: state.currentProject!.pages.map((page) => ({
+          ...page,
+          sections: page.sections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              blocks: section.blocks.map((b) => {
+                if (b.id !== containerId || b.type !== "container") return b;
+                const container = b as ContainerBlock;
+                const children = [...(container.children || [])];
+                const [moved] = children.splice(fromIndex, 1);
+                children.splice(toIndex, 0, moved);
+                return { ...container, children };
+              }),
+            };
+          }),
+        })),
+      },
+      isDirty: true,
+    }));
+  },
+
   removeBlock: (sectionId, blockId) => {
     const { pushToHistory } = get();
     pushToHistory();
@@ -300,6 +401,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
                     ...col,
                     blocks: col.blocks.filter((childBlock) => childBlock.id !== blockId),
                   })),
+                };
+              }
+              // Nếu là container, lọc trong children
+              if (b.type === "container" && "children" in b) {
+                const container = b as ContainerBlock;
+                return {
+                  ...container,
+                  children: container.children.filter((childBlock) => childBlock.id !== blockId),
                 };
               }
               return b;

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { CaretRightIcon } from "@phosphor-icons/react";
-import { builderStyles as styles } from "./Builder.styles";
+import { builderStyles as styles } from "../Builder.styles";
 import { cn } from "@/lib/utils";
 
 interface PropertiesProps {

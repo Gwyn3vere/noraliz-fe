@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 
-export function useBlockDrop(blockId: string, sectionId: string, columnId?: string) {
+export function useBlockDrop(blockId: string, sectionId: string, columnId?: string, containerId?: string) {
   const { setNodeRef, isOver } = useDroppable({
     id: `block-${blockId}`,
     data: {
@@ -8,6 +8,8 @@ export function useBlockDrop(blockId: string, sectionId: string, columnId?: stri
       blockId,
       columnId,
       isColumn: !!columnId,
+      containerId,
+      isInContainer: !!containerId,
     },
   });
   return { setNodeRef, isOver };

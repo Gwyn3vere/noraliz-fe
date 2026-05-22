@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface DropZoneProps {
   id: string;
-  data: Record<string, unknown>; // chứa sectionId/pageId và order
+  data: Record<string, unknown>;
   direction?: "vertical" | "horizontal";
   className?: string;
 }
