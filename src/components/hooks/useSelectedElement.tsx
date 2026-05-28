@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useEditorStore } from "@/stores/editorStore";
-import type { ColumnBlock, ColumnsBlock, Block, Section } from "@/types";
+import type { ColumnBlock, ColumnsBlock, Block, Section, ContainerBlock } from "@/types";
 
 export function useSelectedElement() {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
@@ -23,6 +23,11 @@ export function useSelectedElement() {
             const found = col.blocks.find((b) => b.id === selectedBlockId);
             if (found) return found;
           }
+        }
+        if (block.type === "container") {
+          const container = block as ContainerBlock;
+          const found = container.children?.find((b) => b.id === selectedBlockId);
+          if (found) return found;
         }
       }
     }

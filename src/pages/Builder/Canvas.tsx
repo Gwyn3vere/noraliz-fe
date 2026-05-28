@@ -20,21 +20,33 @@ import {
   ArrowClockwiseIcon,
   GearIcon,
   SlidersHorizontalIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { builderStyles as styles } from "./Builder.styles";
 import { useCanvasInteraction } from "@/components/hooks/useCanvasInteraction";
-import { CanvasRenderer } from "./CanvasRenderer";
+import { useAutoSave } from "@/components/hooks/useAutoSave";
+import { CanvasRenderer } from "./Render/CanvasRenderer";
 import { useEditorStore } from "@/stores/editorStore";
 import { useDndContext } from "@dnd-kit/core";
 import { CanvasContext } from "./CanvasContext";
+import { StatusBar } from "./StatusBar";
 
 function Canvas() {
   const [projectName, setProjectName] = useState("Project name");
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const setReorderingSection = useEditorStore((state) => state.setReorderingSection);
+
+  const { performSave, isSaving, lastSavedAt, isDirty } = useAutoSave();
+
+  const currentPageId = useEditorStore((state) => state.currentPageId);
+  const currentProject = useEditorStore((state) => state.currentProject);
+  const setCurrentPage = useEditorStore((state) => state.setCurrentPage);
+  const addPage = useEditorStore((state) => state.addPage);
+  const removePage = useEditorStore((state) => state.removePage);
+  const pages = currentProject?.pages ?? [];
 
   const dndContext = useDndContext();
   const isDragging = !!dndContext.active;
@@ -100,7 +112,7 @@ function Canvas() {
         >
           <div className="h-screen flex items-center justify-center" onClick={handleCanvasClick}>
             <div
-              className="transition-transform duration-100 ease-out origin-center rounded-[10px]"
+              className={cn("origin-center rounded-[10px]", !isPanning && "transition-transform duration-300 ease-out")}
               style={{
                 width: 1440,
                 height: 820,
@@ -111,16 +123,43 @@ function Canvas() {
             >
               {/* Browser tab - url */}
               <div className="h-[30px] inline-flex gap-2 rounded-[10px] mb-2">
-                <div
+                {pages.map((page) => (
+                  <div
+                    key={page.id}
+                    onClick={() => setCurrentPage(page.id)}
+                    className={cn(
+                      "flex items-center justify-between cursor-pointer w-[160px] rounded-[10px] h-full",
+                      page.id === currentPageId
+                        ? "bg-[var(--color-light)] text-[var(--color-dark)] font-medium"
+                        : "bg-[var(--color-dark)]/5 text-[var(--color-dark)]/50 hover:bg-[var(--color-dark)]/10",
+                    )}
+                  >
+                    <span className="px-3 font-medium text-[13px]">{page.name}</span>
+
+                    {pages.length > 1 && (
+                      <Button
+                        className={cn(
+                          "w-[20px] h-[20px] mr-1 text-[9px] !rounded-full hover:bg-[var(--color-dark)]/10",
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removePage(page.id);
+                        }}
+                      >
+                        <XIcon size={11} weight="bold" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                <Button
                   className={cn(
-                    "flex items-center cursor-pointer",
-                    "bg-[var(--color-light)] w-[160px] rounded-[10px] h-full",
+                    "w-[30px] h-[30px] text-[10px] !rounded-[10px] bg-[var(--color-dark)]/5",
+                    "hover:bg-[var(--color-dark)]/10",
                   )}
+                  onClick={addPage}
                 >
-                  <span className="px-3 font-medium text-[13px]">{currentPage.name}</span>
-                </div>
-                <Button className="w-[30px] h-[30px] !rounded-[10px] bg-[var(--color-dark)]/5">
-                  <PlusIcon size={12} />
+                  <PlusIcon size={10} />
                 </Button>
               </div>
               <div
@@ -194,14 +233,21 @@ function Canvas() {
           </div>
 
           {/* Preview */}
-          <Button className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover)}
+            onClick={() => {
+              if (currentProject) {
+                window.open(`/preview/${currentProject.id}`, "_blank");
+              }
+            }}
+          >
             <ArrowSquareOutIcon size={20} weight="fill" />
             <span className={styles.canvasText}>Priview in new tab</span>
           </Button>
         </Interaction>
         <Interaction position="top-[20px] right-[40px]">
           {/* Save - Publish */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button onClick={performSave} className={cn(styles.canvasButton, styles.canvasButtonHover)}>
             <UploadIcon size={20} weight="fill" />
           </Button>
           <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
@@ -219,12 +265,7 @@ function Canvas() {
           </Button>
         </Interaction>
         <Interaction position="bottom-[20px] left-[40px]">
-          {/* Status */}
-          <div className={styles.canvasStatus}>
-            <span>Saved: Just now</span>
-            <span className="text-[var(--color-dark)]/20">|</span>
-            <span>Page: 1</span>
-          </div>
+          <StatusBar isSaving={isSaving} lastSavedAt={lastSavedAt} isDirty={isDirty} />
         </Interaction>
         <Interaction position="bottom-[20px] left-1/2 -translate-x-1/2">
           {/* View mode */}

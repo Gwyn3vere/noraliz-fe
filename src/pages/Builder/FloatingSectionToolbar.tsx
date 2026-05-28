@@ -26,6 +26,8 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
   const setReorderingSection = useEditorStore((state) => state.setReorderingSection);
   const reorderSections = useEditorStore((state) => state.reorderSections);
   const currentPage = useEditorStore((state) => state.getCurrentPage());
+  const removeSection = useEditorStore((state) => state.removeSection);
+  const clearSelection = useEditorStore((state) => state.clearSelection);
 
   const isReorderActive = reorderingSectionId === sectionId;
   const sections = currentPage?.sections || [];
@@ -40,6 +42,12 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
     if (currentIndex < sections.length - 1) {
       reorderSections(currentIndex, currentIndex + 1);
     }
+  };
+
+  const handleRemove = () => {
+    removeSection(sectionId);
+    clearSelection();
+    onClose?.();
   };
 
   const updatePosition = useCallback(() => {
@@ -61,7 +69,6 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
     setPosition({ top, left });
   }, [sectionId]);
 
-  // Cập nhật vị trí liên tục để bám theo section khi pan/scroll
   useEffect(() => {
     let rafId: number;
     const loop = () => {
@@ -72,7 +79,6 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
     return () => cancelAnimationFrame(rafId);
   }, [updatePosition]);
 
-  // Cập nhật ngay khi order thay đổi
   useEffect(() => {
     updatePosition();
   }, [order, updatePosition]);
@@ -104,7 +110,7 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
             isReorderActive ? "bg-[var(--color-primary)] text-white" : "hover:bg-[var(--color-light)]/5",
           )}
           onClick={(e) => {
-            e.stopPropagation(); // ← ngăn chặn select section
+            e.stopPropagation();
             setReorderingSection(isReorderActive ? null : sectionId);
           }}
         >
@@ -118,7 +124,7 @@ export function FloatingSectionToolbar({ sectionId, order, onClose }: Props) {
         <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5">
           <CopySimpleIcon size={20} weight="bold" />
         </Button>
-        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5" onClick={onClose}>
+        <Button className="w-[40px] h-[40px] !rounded-full hover:bg-[var(--color-light)]/5" onClick={handleRemove}>
           <TrashIcon size={20} weight="bold" />
         </Button>
       </div>

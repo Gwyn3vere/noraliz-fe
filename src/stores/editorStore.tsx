@@ -1,5 +1,7 @@
 import { create } from "zustand";
-import type { Project, Page, Section, Block, ColumnsBlock } from "@/types";
+import type { Project, Page, Section, Block, ColumnsBlock, ContainerBlock } from "@/types";
+import { v4 as uuidv4 } from "uuid";
+import { updateBlockRecursive } from "@/helper/updateBlockRecursive";
 
 interface EditorState {
   // ─── Core Data ───
@@ -29,6 +31,8 @@ interface EditorState {
   setCurrentProject: (project: Project) => void;
 
   // ─── Actions: Page ───
+  addPage: () => void;
+  removePage: (pageId: string) => void;
   setCurrentPage: (pageId: string) => void;
 
   // ─── Actions: Section ───
@@ -43,6 +47,7 @@ interface EditorState {
   updateBlock: (blockId: string, updater: (block: Block) => Block) => void;
 
   addBlockToColumn: (sectionId: string, columnId: string, block: Block, order: number) => void;
+  addBlockToContainer: (sectionId: string, containerId: string, block: Block, order: number) => void;
   selectColumn: (columnId: string | null, sectionId?: string) => void;
   removeColumn: (sectionId: string, columnId: string) => void;
 
@@ -53,6 +58,7 @@ interface EditorState {
   reorderBlocks: (sectionId: string, fromIndex: number, toIndex: number) => void;
   reorderColumns: (sectionId: string, columnsBlockId: string, fromIndex: number, toIndex: number) => void;
   reorderBlockInColumn: (sectionId: string, columnId: string, fromIndex: number, toIndex: number) => void;
+  reorderBlockInContainer: (sectionId: string, containerId: string, fromIndex: number, toIndex: number) => void;
   moveBlockBetweenColumns: (
     sectionId: string,
     fromColumnId: string,
@@ -110,6 +116,50 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // ─── Page ───
   setCurrentPage: (pageId) => {
     set({ currentPageId: pageId });
+  },
+
+  addPage: () => {
+    const { currentProject, pushToHistory } = get();
+    if (!currentProject) return;
+    pushToHistory();
+
+    const pageCount = currentProject.pages.length;
+    const newPage: Page = {
+      id: `page-${uuidv4()}`,
+      name: `Page ${pageCount + 1}`,
+      slug: `page-${pageCount + 1}`,
+      order: pageCount,
+      sections: [],
+    };
+
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: [...state.currentProject!.pages, newPage],
+      },
+      currentPageId: newPage.id,
+      isDirty: true,
+    }));
+  },
+
+  removePage: (pageId) => {
+    const { currentProject, currentPageId, pushToHistory } = get();
+    if (!currentProject) return;
+
+    const updatedPages = currentProject.pages.filter((p) => p.id !== pageId);
+    if (updatedPages.length === 0) return;
+
+    pushToHistory();
+    const newCurrentPageId = pageId === currentPageId ? updatedPages[0].id : currentPageId;
+
+    set({
+      currentProject: {
+        ...currentProject,
+        pages: updatedPages,
+      },
+      currentPageId: newCurrentPageId,
+      isDirty: true,
+    });
   },
 
   // ─── Editing ───
@@ -274,44 +324,112 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  addBlockToContainer: (sectionId, containerId, newBlock, order) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+
+    const updateContainerRecursive = (b: Block): Block => {
+      if (b.type === "container" && b.id === containerId) {
+        const container = b as ContainerBlock;
+        const children = [...(container.children || [])];
+        children.splice(order, 0, newBlock);
+        return { ...container, children };
+      }
+      if (b.type === "columns" && "children" in b) {
+        return {
+          ...b,
+          children: (b as ColumnsBlock).children.map((col) => ({
+            ...col,
+            blocks: col.blocks.map((child) => updateContainerRecursive(child)),
+          })),
+        } as Block;
+      }
+      if (b.type === "container" && "children" in b) {
+        return {
+          ...b,
+          children: (b as ContainerBlock).children.map((child) => updateContainerRecursive(child)),
+        } as Block;
+      }
+      return b;
+    };
+
+    set((state) => {
+      const updatedPages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((b) => updateContainerRecursive(b)),
+          };
+        }),
+      }));
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
+    });
+  },
+
+  reorderBlockInContainer: (sectionId, containerId, fromIndex, toIndex) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => ({
+      currentProject: {
+        ...state.currentProject!,
+        pages: state.currentProject!.pages.map((page) => ({
+          ...page,
+          sections: page.sections.map((section) => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              blocks: section.blocks.map((b) => {
+                if (b.id !== containerId || b.type !== "container") return b;
+                const container = b as ContainerBlock;
+                const children = [...(container.children || [])];
+                const [moved] = children.splice(fromIndex, 1);
+                children.splice(toIndex, 0, moved);
+                return { ...container, children };
+              }),
+            };
+          }),
+        })),
+      },
+      isDirty: true,
+    }));
+  },
+
   removeBlock: (sectionId, blockId) => {
     const { pushToHistory } = get();
     pushToHistory();
+
+    const removeRecursive = (block: Block): Block | null => {
+      if (block.id === blockId) return null;
+      if (block.type === "columns" && "children" in block) {
+        const colsBlock = block as ColumnsBlock;
+        const updatedChildren = colsBlock.children.map((col) => ({
+          ...col,
+          blocks: col.blocks.map((child) => removeRecursive(child)).filter((b): b is Block => b !== null),
+        }));
+        return { ...colsBlock, children: updatedChildren };
+      }
+      if (block.type === "container" && "children" in block) {
+        const container = block as ContainerBlock;
+        const updatedChildren = container.children
+          .map((child) => removeRecursive(child))
+          .filter((b): b is Block => b !== null);
+        return { ...container, children: updatedChildren };
+      }
+      return block;
+    };
 
     set((state) => {
       const updatedPages = state.currentProject!.pages.map((page) => ({
         ...page,
         sections: page.sections.map((s) => {
           if (s.id !== sectionId) return s;
-
-          // Lọc block trực tiếp trong section
-          const updatedBlocks = s.blocks
-            .filter((b) => {
-              if (b.id === blockId) return false;
-              return true;
-            })
-            .map((b) => {
-              // Nếu là columns, lọc trong children
-              if (b.type === "columns" && "children" in b) {
-                const colsBlock = b as ColumnsBlock;
-                return {
-                  ...colsBlock,
-                  children: colsBlock.children.map((col) => ({
-                    ...col,
-                    blocks: col.blocks.filter((childBlock) => childBlock.id !== blockId),
-                  })),
-                };
-              }
-              return b;
-            });
-
+          const updatedBlocks = s.blocks.map((b) => removeRecursive(b)).filter((b): b is Block => b !== null);
           return { ...s, blocks: updatedBlocks };
         }),
       }));
-      return {
-        currentProject: { ...state.currentProject!, pages: updatedPages },
-        isDirty: true,
-      };
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
     });
   },
 
@@ -324,33 +442,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ...page,
         sections: page.sections.map((section) => ({
           ...section,
-          blocks: section.blocks.map((b) => {
-            // Nếu chính block này được chọn
-            if (b.id === blockId) return updater(b);
-
-            // Nếu là columns, tìm trong children
-            if (b.type === "columns" && "children" in b) {
-              const colsBlock = b as ColumnsBlock;
-              return {
-                ...colsBlock,
-                children: colsBlock.children.map((col) => ({
-                  ...col,
-                  blocks: col.blocks.map((childBlock) => {
-                    if (childBlock.id === blockId) return updater(childBlock);
-                    return childBlock;
-                  }),
-                })),
-              };
-            }
-
-            return b;
-          }),
+          blocks: section.blocks.map((b) => updateBlockRecursive(b, blockId, updater)),
         })),
       }));
-      return {
-        currentProject: { ...state.currentProject!, pages: updatedPages },
-        isDirty: true,
-      };
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
     });
   },
 

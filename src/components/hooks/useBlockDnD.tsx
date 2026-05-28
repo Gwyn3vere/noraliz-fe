@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
-import { useSensor, useSensors, PointerSensor, pointerWithin } from "@dnd-kit/core";
-import type { DragEndEvent, DragStartEvent, DragOverEvent } from "@dnd-kit/core";
+import { useSensor, useSensors, PointerSensor, pointerWithin, closestCenter } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent, DragOverEvent, CollisionDetection } from "@dnd-kit/core";
 import { v4 as uuidv4 } from "uuid";
 import { useEditorStore } from "@/stores/editorStore";
-import type { PrimitiveBlock, Section, Block, ColumnBlock, ColumnsBlock } from "@/types";
+import type { PrimitiveBlock, Section, Block, ColumnBlock, ColumnsBlock, ContainerBlock } from "@/types";
 
 interface UseBlockDnDProps {
   primitiveBlocks: PrimitiveBlock[];
@@ -45,6 +45,23 @@ function getBlockOrderInColumn(columnId: string, clientX: number, clientY: numbe
   return blocksArray.length;
 }
 
+function getBlockOrderInContainer(containerId: string, clientX: number, clientY: number): number {
+  const blockElements = document.querySelectorAll(`[data-container-id="${containerId}"] [data-block-id]`);
+  if (blockElements.length === 0) return 0;
+
+  const blocksArray = Array.from(blockElements);
+  const containerEl = document.querySelector(`[data-container-id="${containerId}"]`);
+  const isHorizontal = ["row", "row-reverse"].includes(window.getComputedStyle(containerEl!).flexDirection);
+
+  for (let i = 0; i < blocksArray.length; i++) {
+    const rect = blocksArray[i].getBoundingClientRect();
+    const pivot = isHorizontal ? rect.left : rect.top;
+    const pointer = isHorizontal ? clientX : clientY;
+    if (pointer < pivot + (isHorizontal ? rect.width : rect.height) / 2) return i;
+  }
+  return blocksArray.length;
+}
+
 function getSectionOrderFromPointer(pageId: string, clientY: number): number {
   const sectionElements = document.querySelectorAll(`[data-page-id="${pageId}"] [data-section-id]`);
   if (sectionElements.length === 0) return 0;
@@ -72,6 +89,7 @@ function getDropPoint(event: DragEndEvent): { dropX: number; dropY: number } {
 
 function buildBlock(blockType: string, order: number, defaultProps: Record<string, unknown>): Block {
   const isColumns = blockType === "columns";
+  const isContainer = blockType === "container";
   const count = isColumns ? (defaultProps.count as number) || 2 : 0;
 
   const base = {
@@ -83,16 +101,22 @@ function buildBlock(blockType: string, order: number, defaultProps: Record<strin
     props: defaultProps,
   };
 
-  if (!isColumns) return base as unknown as Block;
+  if (isColumns) {
+    const children: ColumnBlock[] = Array.from({ length: count }, (_, i) => ({
+      id: uuidv4(),
+      type: "column" as const,
+      order: i,
+      blocks: [],
+      props: { styles: { flex: "1" } },
+    }));
+    return { ...base, children } as unknown as Block;
+  }
 
-  const children: ColumnBlock[] = Array.from({ length: count }, (_, i) => ({
-    id: uuidv4(),
-    type: "column" as const,
-    order: i,
-    blocks: [],
-  }));
+  if (isContainer) {
+    return { ...base, children: [] } as unknown as Block;
+  }
 
-  return { ...base, children } as unknown as Block;
+  return base as unknown as Block;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -152,11 +176,7 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
 
       const activeData = (active.data.current as any) || {};
       const overData = (over.data.current as any) || {};
-
-      const blockType: string = activeData.blockType;
-      const blockId: string = activeData.blockId;
       const kind: string = activeData.kind;
-
       const { dropX, dropY } = getDropPoint(event);
       const store = useEditorStore.getState();
 
@@ -176,45 +196,16 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       }
 
       // ── Reorder BLOCK ──
-      if (kind === "reorder-block" || kind === "reorder-column-block") {
+      if (
+        kind === "reorder-block" ||
+        kind === "reorder-column-block" ||
+        kind === "reorder-container-block" ||
+        kind === "reorder-column"
+      )
         return;
-      }
 
-      if (kind === "reorder-column-block") {
-        const { blockId: reorderBlockId, sectionId: sourceSectionId, columnId: sourceColumnId } = activeData;
-        const targetColumnId = overData.columnId;
-        const targetSectionId = overData.sectionId;
-
-        if (!targetColumnId || !targetSectionId) return;
-
-        const currentPage = store.getCurrentPage();
-        const section = currentPage?.sections.find((s) => s.id === sourceSectionId);
-        const colsBlock = section?.blocks.find(
-          (b) => b.type === "columns" && (b as ColumnsBlock).children.some((c) => c.id === sourceColumnId),
-        ) as ColumnsBlock | undefined;
-
-        if (!colsBlock) return;
-
-        const sourceCol = colsBlock.children.find((c) => c.id === sourceColumnId);
-        if (!sourceCol) return;
-
-        const fromIndex = sourceCol.blocks.findIndex((b) => b.id === reorderBlockId);
-        if (fromIndex === -1) return;
-
-        if (sourceColumnId === targetColumnId) {
-          // Reorder trong cùng column
-          const toIndex = getBlockOrderInColumn(targetColumnId, dropX, dropY);
-          if (fromIndex !== toIndex) {
-            store.reorderBlockInColumn(sourceSectionId, sourceColumnId, fromIndex, toIndex);
-          }
-        } else {
-          // Move sang column khác
-          const toIndex = getBlockOrderInColumn(targetColumnId, dropX, dropY);
-          store.moveBlockBetweenColumns(sourceSectionId, sourceColumnId, targetColumnId, reorderBlockId, toIndex);
-        }
-        return;
-      }
-
+      const blockType: string = activeData.blockType;
+      const blockId: string = activeData.blockId;
       if (!blockType) return;
 
       // ── Drop SECTION ──────────────────────────────────────────────────────
@@ -222,15 +213,26 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
         const { currentPageId } = store;
         if (!currentPageId) return;
 
-        const dropZoneOrder = overData.order;
-        const isDropZone = overData.pageId !== undefined;
+        const currentPage = store.getCurrentPage();
+        const sections = currentPage?.sections || [];
+        let order = sections.length; // mặc định cuối
 
-        const order = isDropZone ? dropZoneOrder : getSectionOrderFromPointer(currentPageId, dropY);
+        if (overData.order !== undefined) {
+          order = overData.order;
+        }
+
+        const blockApi = blockId ? getBlockById(blockId) : null;
+        const defaultProps = blockApi?.defaultProps
+          ? typeof blockApi.defaultProps === "string"
+            ? JSON.parse(blockApi.defaultProps)
+            : blockApi.defaultProps
+          : {};
+
         const newSection: Section = {
           id: uuidv4(),
           templateId: blockType,
           order,
-          props: {},
+          props: defaultProps,
           blocks: [],
         };
         store.addSection(newSection, order);
@@ -255,12 +257,64 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
           : blockApi.defaultProps
         : getDefaultPropsForType(blockType, variant);
 
+      // if (kind === "reorder-column-block") {
+      //   const { blockId: reorderBlockId, sectionId: sourceSectionId, columnId: sourceColumnId } = activeData;
+      //   const targetColumnId = overData.columnId;
+      //   const targetSectionId = overData.sectionId;
+
+      //   if (!targetColumnId || !targetSectionId) return;
+
+      //   const currentPage = store.getCurrentPage();
+      //   const section = currentPage?.sections.find((s) => s.id === sourceSectionId);
+      //   const colsBlock = section?.blocks.find(
+      //     (b) => b.type === "columns" && (b as ColumnsBlock).children.some((c) => c.id === sourceColumnId),
+      //   ) as ColumnsBlock | undefined;
+
+      //   if (!colsBlock) return;
+
+      //   const sourceCol = colsBlock.children.find((c) => c.id === sourceColumnId);
+      //   if (!sourceCol) return;
+
+      //   const fromIndex = sourceCol.blocks.findIndex((b) => b.id === reorderBlockId);
+      //   if (fromIndex === -1) return;
+
+      //   if (sourceColumnId === targetColumnId) {
+      //     // Reorder trong cùng column
+      //     const toIndex = getBlockOrderInColumn(targetColumnId, dropX, dropY);
+      //     if (fromIndex !== toIndex) {
+      //       store.reorderBlockInColumn(sourceSectionId, sourceColumnId, fromIndex, toIndex);
+      //     }
+      //   } else {
+      //     // Move sang column khác
+      //     const toIndex = getBlockOrderInColumn(targetColumnId, dropX, dropY);
+      //     store.moveBlockBetweenColumns(sourceSectionId, sourceColumnId, targetColumnId, reorderBlockId, toIndex);
+      //   }
+      //   return;
+      // }
+
+      const isContainer: boolean = overData.isContainer ?? false;
+      const containerId: string | undefined = overData.containerId;
+
+      if (isContainer && containerId) {
+        if (blockType === "container" || blockType === "columns") {
+          console.warn("Cannot nest containers or columns");
+          return;
+        }
+        const order =
+          overData.order !== undefined ? overData.order : getBlockOrderInContainer(containerId, dropX, dropY);
+        const newBlock = buildBlock(blockType, order, defaultProps);
+        store.addBlockToContainer(targetSectionId, containerId, newBlock, order);
+        return;
+      }
+
       const isColumn: boolean = overData.isColumn ?? false;
       const columnId: string | undefined = overData.columnId;
 
       if (isColumn && columnId) {
-        if (blockType === "columns") return;
-
+        if (blockType === "columns" || blockType === "container") {
+          console.warn("Cannot nest containers or columns");
+          return;
+        }
         const order = getBlockOrderInColumn(columnId, dropX, dropY);
         const newBlock = buildBlock(blockType, order, defaultProps);
         store.addBlockToColumn(targetSectionId, columnId, newBlock, order);
@@ -282,7 +336,13 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
     const overData = (over.data.current as any) || {};
 
     const kind = activeData.kind;
-    if (kind !== "reorder-block" && kind !== "reorder-column-block" && kind !== "reorder-column") return;
+    if (
+      kind !== "reorder-block" &&
+      kind !== "reorder-column-block" &&
+      kind !== "reorder-column" &&
+      kind !== "reorder-container-block"
+    )
+      return;
 
     const store = useEditorStore.getState();
     const currentPage = store.getCurrentPage();
@@ -316,6 +376,8 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
       const sourceSectionId = activeData.sectionId;
       const targetSectionId = overData.sectionId;
       if (!sourceSectionId || sourceSectionId !== targetSectionId) return;
+
+      const overBlockId = overData.blockId || (overData.isContainer ? overData.containerId : null);
       if (!overBlockId || activeBlockId === overBlockId) return;
 
       const section = currentPage.sections.find((s) => s.id === sourceSectionId);
@@ -366,11 +428,46 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
         store.moveBlockBetweenColumns(sourceSectionId, sourceColumnId, targetColumnId, activeBlockId, toIndex);
       }
     }
+
+    if (kind === "reorder-container-block") {
+      const sourceContainerId = activeData.containerId;
+      const targetContainerId = overData.containerId;
+      const sourceSectionId = activeData.sectionId;
+
+      if (!sourceContainerId || !targetContainerId || !sourceSectionId) return;
+
+      if (sourceContainerId === targetContainerId) {
+        // Swap trong cùng container
+        if (!overBlockId || activeBlockId === overBlockId) return;
+
+        const section = currentPage.sections.find((s) => s.id === sourceSectionId);
+        const containerBlock = section?.blocks.find((b) => b.id === sourceContainerId && b.type === "container") as
+          | ContainerBlock
+          | undefined;
+        if (!containerBlock) return;
+
+        const fromIndex = containerBlock.children.findIndex((b) => b.id === activeBlockId);
+        const toIndex = containerBlock.children.findIndex((b) => b.id === overBlockId);
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+
+        store.reorderBlockInContainer(sourceSectionId, sourceContainerId, fromIndex, toIndex);
+      } else {
+        // Move sang container khác (có thể thêm sau)
+      }
+    }
   }, []);
 
   return {
     sensors,
-    collisionDetection: pointerWithin,
+    collisionDetection: useCallback(
+      (args: Parameters<CollisionDetection>[0]) => {
+        if (activeDragKind === "section") {
+          return closestCenter(args);
+        }
+        return pointerWithin(args);
+      },
+      [activeDragKind],
+    ),
     handleDragStart,
     handleDragEnd,
     handleDragOver,

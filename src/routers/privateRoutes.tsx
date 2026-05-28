@@ -2,10 +2,12 @@ import { lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import BuilderLayout from "@/components/layouts/BuilderLayout";
+import PreviewLayout from "@/components/layouts/PreviewLayout";
 import { PageLoader } from "@/pages/Loading/PageLoader";
 
 const Builder = lazy(() => import("../pages/Builder/Builder"));
 const Dashboard = lazy(() => import("@/pages/Dashboard/Dashboard"));
+const Preview = lazy(() => import("@/pages/Preview/Preview"));
 
 function PageLoading() {
   return <PageLoader />;
@@ -38,6 +40,15 @@ export const privateRoutes: RouteObject[] = [
             <Dashboard />
           </LazyPage>
         ),
+      },
+    ],
+  },
+  {
+    element: <PreviewLayout />,
+    children: [
+      {
+        path: "/preview/:projectId",
+        element: <Preview />,
       },
     ],
   },

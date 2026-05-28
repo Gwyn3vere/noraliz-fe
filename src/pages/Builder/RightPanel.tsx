@@ -13,12 +13,19 @@ import { usePrimitiveBlocks } from "@/components/hooks/usePrimitiveBlocks";
 import { useSelectedElement } from "@/components/hooks/useSelectedElement";
 import type { Block } from "@/types";
 import { cn } from "@/lib/utils";
-import Property from "./Property";
-import Typography from "./Typography";
-import Content from "./Content";
+import Property from "./Properties/Property";
+import Typography from "./Properties/Typography";
+import Content from "./Content/Content";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/stores/editorStore";
-import type { ColumnsBlock } from "@/types";
+import type { ColumnsBlock, ContainerBlock } from "@/types";
+import Spacing from "./Properties/Spacing";
+import Layout from "./Properties/Layout";
+import Size from "./Properties/Size";
+import Position from "./Properties/Position";
+import Background from "./Properties/Background";
+import Border from "./Properties/Border";
+import Effects from "./Properties/Effects";
 
 export default function RighPanel() {
   const { selectedBlock, selectedColumnSectionId, selectedColumn, selectionType } = useSelectedElement();
@@ -45,7 +52,6 @@ export default function RighPanel() {
           removeBlock(section.id, selectedBlock.id);
           return;
         }
-
         for (const block of section.blocks) {
           if (block.type === "columns") {
             const colsBlock = block as ColumnsBlock;
@@ -56,12 +62,18 @@ export default function RighPanel() {
               }
             }
           }
+          if (block.type === "container") {
+            const container = block as ContainerBlock;
+            if (container.children?.some((b) => b.id === selectedBlock.id)) {
+              removeBlock(section.id, selectedBlock.id);
+              return;
+            }
+          }
         }
       }
     } else if (selectionType === "column" && selectedColumn && selectedColumnSectionId) {
       removeColumn?.(selectedColumnSectionId, selectedColumn.id);
     }
-    // Section không làm gì ở đây
   }, [selectionType, selectedBlock, selectedColumn, selectedColumnSectionId, removeBlock, removeColumn]);
 
   const displayName =
@@ -124,23 +136,26 @@ export default function RighPanel() {
             <Property title="Typography">
               <Typography />
             </Property>
+            <Property title="Layout">
+              <Layout />
+            </Property>
             <Property title="Spacing">
-              <Typography />
+              <Spacing />
             </Property>
             <Property title="Size">
-              <Typography />
+              <Size />
             </Property>
             <Property title="Position">
-              <Typography />
+              <Position />
             </Property>
             <Property title="Background">
-              <Typography />
+              <Background />
             </Property>
             <Property title="Border">
-              <Typography />
+              <Border />
             </Property>
             <Property title="Effects">
-              <Typography />
+              <Effects />
             </Property>
           </div>
         ) : (
