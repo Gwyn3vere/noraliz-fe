@@ -37,9 +37,8 @@ function Effects() {
   const [filterList, setFilterList] = useState<string[]>(() => {
     const raw = currentStyles.filter || "";
     if (!raw) return [];
-    // Parse "blur(5px) brightness(1.2)" -> ["blur", "brightness"]
     const names = raw.match(/(\w+)\(/g);
-    return names ? names.map((n) => n.replace("(", "")) : [];
+    return names ? names.map((n: string) => n.replace("(", "")) : [];
   });
   const filterValues = useMemo(() => {
     const raw = currentStyles.filter || "";
