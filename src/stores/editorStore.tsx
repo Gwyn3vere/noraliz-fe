@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Project, Page, Section, Block, ColumnsBlock, ContainerBlock } from "@/types";
 import { v4 as uuidv4 } from "uuid";
+import { updateBlockRecursive } from "@/helper/updateBlockRecursive";
 
 interface EditorState {
   // ─── Core Data ───
@@ -323,9 +324,35 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  addBlockToContainer: (sectionId, containerId, block, order) => {
+  addBlockToContainer: (sectionId, containerId, newBlock, order) => {
     const { pushToHistory } = get();
     pushToHistory();
+
+    const updateContainerRecursive = (b: Block): Block => {
+      if (b.type === "container" && b.id === containerId) {
+        const container = b as ContainerBlock;
+        const children = [...(container.children || [])];
+        children.splice(order, 0, newBlock);
+        return { ...container, children };
+      }
+      if (b.type === "columns" && "children" in b) {
+        return {
+          ...b,
+          children: (b as ColumnsBlock).children.map((col) => ({
+            ...col,
+            blocks: col.blocks.map((child) => updateContainerRecursive(child)),
+          })),
+        } as Block;
+      }
+      if (b.type === "container" && "children" in b) {
+        return {
+          ...b,
+          children: (b as ContainerBlock).children.map((child) => updateContainerRecursive(child)),
+        } as Block;
+      }
+      return b;
+    };
+
     set((state) => {
       const updatedPages = state.currentProject!.pages.map((page) => ({
         ...page,
@@ -333,13 +360,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           if (section.id !== sectionId) return section;
           return {
             ...section,
-            blocks: section.blocks.map((b) => {
-              if (b.id !== containerId || b.type !== "container") return b;
-              const container = b as ContainerBlock;
-              const children = [...(container.children || [])];
-              children.splice(order, 0, block);
-              return { ...container, children };
-            }),
+            blocks: section.blocks.map((b) => updateContainerRecursive(b)),
           };
         }),
       }));
@@ -379,48 +400,36 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { pushToHistory } = get();
     pushToHistory();
 
+    const removeRecursive = (block: Block): Block | null => {
+      if (block.id === blockId) return null;
+      if (block.type === "columns" && "children" in block) {
+        const colsBlock = block as ColumnsBlock;
+        const updatedChildren = colsBlock.children.map((col) => ({
+          ...col,
+          blocks: col.blocks.map((child) => removeRecursive(child)).filter((b): b is Block => b !== null),
+        }));
+        return { ...colsBlock, children: updatedChildren };
+      }
+      if (block.type === "container" && "children" in block) {
+        const container = block as ContainerBlock;
+        const updatedChildren = container.children
+          .map((child) => removeRecursive(child))
+          .filter((b): b is Block => b !== null);
+        return { ...container, children: updatedChildren };
+      }
+      return block;
+    };
+
     set((state) => {
       const updatedPages = state.currentProject!.pages.map((page) => ({
         ...page,
         sections: page.sections.map((s) => {
           if (s.id !== sectionId) return s;
-
-          // Lọc block trực tiếp trong section
-          const updatedBlocks = s.blocks
-            .filter((b) => {
-              if (b.id === blockId) return false;
-              return true;
-            })
-            .map((b) => {
-              // Nếu là columns, lọc trong children
-              if (b.type === "columns" && "children" in b) {
-                const colsBlock = b as ColumnsBlock;
-                return {
-                  ...colsBlock,
-                  children: colsBlock.children.map((col) => ({
-                    ...col,
-                    blocks: col.blocks.filter((childBlock) => childBlock.id !== blockId),
-                  })),
-                };
-              }
-              // Nếu là container, lọc trong children
-              if (b.type === "container" && "children" in b) {
-                const container = b as ContainerBlock;
-                return {
-                  ...container,
-                  children: container.children.filter((childBlock) => childBlock.id !== blockId),
-                };
-              }
-              return b;
-            });
-
+          const updatedBlocks = s.blocks.map((b) => removeRecursive(b)).filter((b): b is Block => b !== null);
           return { ...s, blocks: updatedBlocks };
         }),
       }));
-      return {
-        currentProject: { ...state.currentProject!, pages: updatedPages },
-        isDirty: true,
-      };
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
     });
   },
 
@@ -433,33 +442,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ...page,
         sections: page.sections.map((section) => ({
           ...section,
-          blocks: section.blocks.map((b) => {
-            // Nếu chính block này được chọn
-            if (b.id === blockId) return updater(b);
-
-            // Nếu là columns, tìm trong children
-            if (b.type === "columns" && "children" in b) {
-              const colsBlock = b as ColumnsBlock;
-              return {
-                ...colsBlock,
-                children: colsBlock.children.map((col) => ({
-                  ...col,
-                  blocks: col.blocks.map((childBlock) => {
-                    if (childBlock.id === blockId) return updater(childBlock);
-                    return childBlock;
-                  }),
-                })),
-              };
-            }
-
-            return b;
-          }),
+          blocks: section.blocks.map((b) => updateBlockRecursive(b, blockId, updater)),
         })),
       }));
-      return {
-        currentProject: { ...state.currentProject!, pages: updatedPages },
-        isDirty: true,
-      };
+      return { currentProject: { ...state.currentProject!, pages: updatedPages }, isDirty: true };
     });
   },
 

@@ -35,10 +35,17 @@ export function useBlockInteraction(block: Block, sectionId: string, columnId?: 
     [setDropRef, setDragRef, isReorderMode],
   );
 
+  const rawStyles = (block as any).props?.styles || {};
+  const { transform, ...restStyles } = rawStyles;
+
   const style: React.CSSProperties = {
-    ...(block as any).props?.styles,
+    ...restStyles,
     opacity: isDragging ? 0.4 : 1,
   };
+
+  if (transform) {
+    style.transform = transform;
+  }
 
   const showOutline = isHovered || isSelected;
 

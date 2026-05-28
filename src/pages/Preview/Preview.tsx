@@ -42,8 +42,8 @@ export default function Preview() {
   if (!page) return <p>No page found.</p>;
 
   return (
-    <div>
-      {page.sections.map((section) => (
+    <div className="flow-root">
+      {page.sections.map((section: Section) => (
         <SectionPreview key={section.id} section={section} />
       ))}
     </div>

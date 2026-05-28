@@ -43,6 +43,7 @@ export default function FontFamilySelect({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewedFontsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     return () => {
@@ -64,6 +65,15 @@ export default function FontFamilySelect({
     const q = debouncedSearch.toLowerCase();
     return fonts.filter((f) => f.family.toLowerCase().includes(q));
   }, [fonts, debouncedSearch]);
+
+  useEffect(() => {
+    filteredFonts.forEach((font) => {
+      if (!previewedFontsRef.current.has(font.family)) {
+        previewedFontsRef.current.add(font.family);
+        onPreview(font.family);
+      }
+    });
+  }, [filteredFonts, onPreview]);
 
   useEffect(() => {
     filteredFonts.forEach((font) => onPreview(font.family));

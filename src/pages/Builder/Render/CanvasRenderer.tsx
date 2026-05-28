@@ -54,7 +54,7 @@ export function CanvasRenderer() {
   }
 
   return (
-    <div data-page-id={currentPage.id} className="realtive 0 min-h-[calc(820px-86px)]">
+    <div data-page-id={currentPage.id} className="flow-root min-h-[calc(820px-86px)]">
       <DropZone id={`page-drop-0`} data={{ pageId: currentPage.id, order: 0 }} direction="vertical" />
       {currentPage.sections.map((section, index) => (
         <React.Fragment key={section.id}>

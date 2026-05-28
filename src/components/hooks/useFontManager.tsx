@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fontRegistry } from "@/lib/FontRegistry";
+import { fontRegistry } from "@/lib/fontRegistry";
 
 interface GoogleFont {
   family: string;
@@ -40,7 +40,7 @@ export function useFontManager() {
   const [, forceUpdateFontList] = useState(0);
 
   useEffect(() => {
-    const unsubscribe = fontRegistry.subscribe((family) => {
+    const unsubscribe = fontRegistry.subscribe((family: string) => {
       loadedSetRef.current.add(family);
       forceUpdateFontList((n) => n + 1);
     });

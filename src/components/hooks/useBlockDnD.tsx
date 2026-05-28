@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useSensor, useSensors, PointerSensor, pointerWithin, closestCenter } from "@dnd-kit/core";
-import type { DragEndEvent, DragStartEvent, DragOverEvent } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent, DragOverEvent, CollisionDetection } from "@dnd-kit/core";
 import { v4 as uuidv4 } from "uuid";
 import { useEditorStore } from "@/stores/editorStore";
 import type { PrimitiveBlock, Section, Block, ColumnBlock, ColumnsBlock, ContainerBlock } from "@/types";
@@ -460,7 +460,7 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
   return {
     sensors,
     collisionDetection: useCallback(
-      (args) => {
+      (args: Parameters<CollisionDetection>[0]) => {
         if (activeDragKind === "section") {
           return closestCenter(args);
         }

@@ -13,7 +13,7 @@ export function HeadingBlock({ block, sectionId, columnId, containerId }: BlockR
 
   return (
     <HeadingTag
-      ref={(node) => {
+      ref={(node: HTMLElement | null) => {
         ref(node);
         contentRef.current = node;
       }}

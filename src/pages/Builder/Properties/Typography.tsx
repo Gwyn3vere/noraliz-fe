@@ -1,224 +1,286 @@
-import React, { useCallback, useMemo } from "react";
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FontFamilySelect from "@/components/shared/FontFamilySelect";
+import ColorPickerField from "@/components/shared/ColorPickerField";
+import { TextShadowEditor } from "./TextShadowEditor";
+import { useTypographyEditor } from "@/components/hooks/useTypographyEditor";
 import FieldRow from "../Content/FieldRow";
-import { useEditorStore } from "@/stores/editorStore";
-import { useSelectedElement } from "@/components/hooks/useSelectedElement";
-import { useFontManager } from "@/components/hooks/useFontManager";
 import { contentStyles as styles } from "../Content/Content.styles";
 import { cn } from "@/lib/utils";
+import {
+  TextAlignLeftIcon,
+  TextAlignCenterIcon,
+  TextAlignRightIcon,
+  TextAlignJustifyIcon,
+  ArrowsInLineVerticalIcon,
+  ArrowLineUpIcon,
+  ArrowLineDownIcon,
+} from "@phosphor-icons/react";
 
 const FONT_WEIGHTS = ["100", "200", "300", "400", "500", "600", "700", "800", "900"];
 
+const TEXT_DECORATIONS = [
+  { property: "fontStyle", value: "italic", fallback: "normal", label: "I", className: "font-serif italic" },
+  { property: "textDecoration", value: "underline", fallback: "none", label: "U", className: "underline" },
+  { property: "textDecoration", value: "overline", fallback: "none", label: "O", className: "overline" },
+  { property: "textDecoration", value: "line-through", fallback: "none", label: "S", className: "line-through" },
+];
+
+const TEXT_TRANSFORMS = [
+  { property: "textTransform", value: "uppercase", fallback: "none", label: "AA" },
+  { property: "textTransform", value: "lowercase", fallback: "none", label: "aa" },
+  { property: "textTransform", value: "capitalize", fallback: "none", label: "Aa" },
+];
+
+const TEXT_ALIGNMENT = [
+  { property: "textAlign", value: "left", fallback: "none", label: TextAlignLeftIcon },
+  { property: "textAlign", value: "center", fallback: "none", label: TextAlignCenterIcon },
+  { property: "textAlign", value: "right", fallback: "none", label: TextAlignRightIcon },
+  { property: "textAlign", value: "justify", fallback: "none", label: TextAlignJustifyIcon },
+];
+
+const VERTICAL_ALIGN = [
+  { property: "verticalAlign", value: "top", fallback: "baseline", label: ArrowLineUpIcon },
+  { property: "verticalAlign", value: "middle", fallback: "baseline", label: ArrowsInLineVerticalIcon },
+  { property: "verticalAlign", value: "bottom", fallback: "baseline", label: ArrowLineDownIcon },
+];
+
 function Typography() {
-  const updateBlock = useEditorStore((s) => s.updateBlock);
-  const updateSection = useEditorStore((s) => s.updateSection);
-
-  const { selectedBlock, selectedSection, selectionType } = useSelectedElement();
-  const { displayedFonts, loading, error, hasMore, loadMore, loadFont, loadedSetRef } = useFontManager();
-
-  const element = selectedBlock ?? selectedSection;
-  const elementId = element?.id;
-  const isBlock = selectionType === "block";
-  const isSection = selectionType === "section";
-  const currentStyles = useMemo(() => (element as any)?.props?.styles ?? {}, [element]);
-
-  const updateStyles = useCallback(
-    (newStyles: Record<string, string>) => {
-      if (!elementId) return;
-
-      const updater = (el: any) => ({
-        ...el,
-        props: {
-          ...el.props,
-          styles: { ...(el.props?.styles ?? {}), ...newStyles },
-        },
-      });
-
-      if (isBlock) updateBlock(elementId, updater);
-      else if (isSection) updateSection(elementId, updater);
-    },
-    [elementId, isBlock, isSection, updateBlock, updateSection],
-  );
-  const handleFontChange = useCallback(
-    async (font: string) => {
-      await loadFont(font);
-      updateStyles({ fontFamily: font });
-    },
-    [loadFont, updateStyles],
-  );
-  const handleFontWeightChange = useCallback((val: string) => updateStyles({ fontWeight: val }), [updateStyles]);
-  const handleFontSizeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value) updateStyles({ fontSize: `${e.target.value}px` });
-    },
-    [updateStyles],
-  );
-
-  // Toggle style helper
-  const toggleStyle = useCallback(
-    (property: string, value: string, fallback: string) => {
-      const current = currentStyles[property];
-      if (current === value || (!current && fallback === value)) {
-        // Toggle off -> set to fallback
-        updateStyles({ [property]: fallback });
-      } else {
-        // Toggle on
-        updateStyles({ [property]: value });
-      }
-    },
-    [currentStyles, updateStyles],
-  );
-
-  // Active state helper
-  const isActive = useCallback(
-    (property: string, value: string) => {
-      const current = currentStyles[property];
-      return current === value;
-    },
-    [currentStyles],
-  );
+  const {
+    currentStyles,
+    displayedFonts,
+    loading,
+    error,
+    hasMore,
+    isInlineDisplay,
+    loadMore,
+    loadFont,
+    loadedSetRef,
+    toggleStyle,
+    isActive,
+    handleFontChange,
+    handleFontWeightChange,
+    handleFontSizeChange,
+    handleLineHeightChange,
+    handleLetterSpacingChange,
+    handleColorChange,
+    handleTextIndentChange,
+    handleWordSpacingChange,
+    handleWhiteSpaceChange,
+    handleTextOverflowChange,
+    handleTextShadowChange,
+    textIndentValue,
+    wordSpacingValue,
+    fontSizeValue,
+    lineHeightValue,
+    letterSpacingValue,
+  } = useTypographyEditor();
 
   return (
-    <div className="space-y-2">
-      <FieldRow label="Font Family">
-        <FontFamilySelect
-          value={currentStyles.fontFamily ?? ""}
-          onChange={handleFontChange}
-          fonts={displayedFonts}
-          loading={loading}
-          error={error}
-          hasMore={hasMore}
-          onLoadMore={loadMore}
-          onPreview={loadFont}
-          loadedSetRef={loadedSetRef}
-        />
-      </FieldRow>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <FieldRow label="Font Family">
+          <FontFamilySelect
+            value={currentStyles.fontFamily ?? ""}
+            onChange={handleFontChange}
+            fonts={displayedFonts}
+            loading={loading}
+            error={error}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+            onPreview={loadFont}
+            loadedSetRef={loadedSetRef}
+          />
+        </FieldRow>
+
+        <div className="flex items-center gap-2">
+          <Select value={currentStyles.fontWeight ?? ""} onValueChange={handleFontWeightChange}>
+            <SelectTrigger className={cn(styles.contentInput)}>
+              <SelectValue placeholder="Weight" />
+            </SelectTrigger>
+            <SelectContent className="border-none bg-white">
+              {FONT_WEIGHTS.map((w) => (
+                <SelectItem key={w} value={w} className={styles.contentSelect}>
+                  {w}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Input
+            type="number"
+            value={fontSizeValue}
+            placeholder="Size"
+            className={cn(styles.contentInput)}
+            onChange={handleFontSizeChange}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          {TEXT_DECORATIONS.map((dec) => (
+            <Button
+              key={dec.value}
+              type="button"
+              className={cn(
+                "w-[26px] h-[26px]",
+                dec.className,
+                isActive(dec.property, dec.value)
+                  ? "bg-[var(--color-primary)] text-white"
+                  : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
+              )}
+              onClick={() => toggleStyle(dec.property, dec.value, dec.fallback)}
+            >
+              <span className={dec.className}>{dec.label}</span>
+            </Button>
+          ))}
+          {TEXT_TRANSFORMS.map((trans) => (
+            <Button
+              key={trans.value}
+              type="button"
+              className={cn(
+                "w-[26px] h-[26px] text-xs font-medium",
+                isActive(trans.property, trans.value)
+                  ? "bg-[var(--color-primary)] text-white"
+                  : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
+              )}
+              onClick={() => toggleStyle(trans.property, trans.value, trans.fallback)}
+            >
+              {trans.label}
+            </Button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex items-center gap-2">
-        <Select value={currentStyles.fontWeight ?? ""} onValueChange={handleFontWeightChange}>
-          <SelectTrigger className={cn(styles.contentInput)}>
-            <SelectValue placeholder="Weight" />
-          </SelectTrigger>
-          <SelectContent className="border-none bg-white">
-            {FONT_WEIGHTS.map((w) => (
-              <SelectItem key={w} value={w} className={styles.contentSelect}>
-                {w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FieldRow label="Line height">
+          <Input
+            type="number"
+            value={lineHeightValue}
+            className={cn(styles.contentInput)}
+            onChange={handleLineHeightChange}
+          />
+        </FieldRow>
 
-        <Input
-          type="number"
-          value={currentStyles.fontSize ? parseInt(currentStyles.fontSize, 10) : ""}
-          placeholder="Size"
-          className={cn(styles.contentInput)}
-          onChange={handleFontSizeChange}
-        />
+        <FieldRow label="Letter spacing">
+          <Input
+            type="number"
+            value={letterSpacingValue}
+            placeholder="px"
+            className={cn(styles.contentInput)}
+            onChange={handleLetterSpacingChange}
+          />
+        </FieldRow>
       </div>
 
-      <div className="flex items-center justify-between">
-        {/* Italic */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px] font-serif italic",
-            isActive("fontStyle", "italic")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("fontStyle", "italic", "normal")}
-        >
-          I
-        </Button>
+      <div className="relative space-y-2">
+        <FieldRow label="Color">
+          <ColorPickerField value={currentStyles.color || "#000000"} onChange={handleColorChange} />
+        </FieldRow>
 
-        {/* Underline */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px]",
-            isActive("textDecoration", "underline")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("textDecoration", "underline", "none")}
-        >
-          <span className="underline">U</span>
-        </Button>
+        <div>
+          <div className="flex items-center justify-between">
+            {TEXT_ALIGNMENT.map((align) => {
+              const Icon = align.label;
+              return (
+                <Button
+                  key={align.value}
+                  type="button"
+                  className={cn(
+                    "w-[26px] h-[26px]",
+                    isActive(align.property, align.value)
+                      ? "bg-[var(--color-primary)] text-white"
+                      : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
+                  )}
+                  onClick={() => toggleStyle(align.property, align.value, align.fallback)}
+                >
+                  <Icon />
+                </Button>
+              );
+            })}
 
-        {/* Overline */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px]",
-            isActive("textDecoration", "overline")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("textDecoration", "overline", "none")}
-        >
-          <span style={{ textDecoration: "overline" }}>O</span>
-        </Button>
+            {VERTICAL_ALIGN.map((valign) => {
+              const Icon = valign.label;
+              return (
+                <Button
+                  key={valign.value}
+                  type="button"
+                  disabled={!isInlineDisplay}
+                  className={cn(
+                    "w-[26px] h-[26px]",
+                    !isInlineDisplay
+                      ? "opacity-30 cursor-not-allowed bg-[var(--color-dark)]/30"
+                      : isActive("verticalAlign", valign.value)
+                        ? "bg-[var(--color-primary)] text-white"
+                        : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
+                  )}
+                  onClick={() => toggleStyle(valign.property, valign.value, valign.fallback)}
+                >
+                  <Icon weight="fill" />
+                </Button>
+              );
+            })}
+          </div>
 
-        {/* Line-through */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px]",
-            isActive("textDecoration", "line-through")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
+          {!isInlineDisplay && (
+            <p className="text-[10px] text-[var(--color-dark)]/50 mt-1 text-right">
+              Set display to inline‑block to enable vertical align
+            </p>
           )}
-          onClick={() => toggleStyle("textDecoration", "line-through", "none")}
-        >
-          <span className="line-through">S</span>
-        </Button>
-
-        {/* Uppercase */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px] text-xs font-medium",
-            isActive("textTransform", "uppercase")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("textTransform", "uppercase", "none")}
-        >
-          AA
-        </Button>
-
-        {/* Lowercase */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px] text-xs font-medium",
-            isActive("textTransform", "lowercase")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("textTransform", "lowercase", "none")}
-        >
-          aa
-        </Button>
-
-        {/* Capitalize */}
-        <Button
-          type="button"
-          className={cn(
-            "w-[26px] h-[26px] text-xs font-medium",
-            isActive("textTransform", "capitalize")
-              ? "bg-[var(--color-primary)] text-white"
-              : "bg-[var(--color-primary)]/10 text-[var(--color-dark)] hover:bg-[var(--color-primary)]/20",
-          )}
-          onClick={() => toggleStyle("textTransform", "capitalize", "none")}
-        >
-          Aa
-        </Button>
+        </div>
       </div>
+
+      <FieldRow label="Text format">
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            value={textIndentValue}
+            placeholder="Indent (px)"
+            className={cn(styles.contentInput)}
+            onChange={handleTextIndentChange}
+          />
+          <Input
+            type="number"
+            value={wordSpacingValue}
+            placeholder="Word spacing (px)"
+            className={cn(styles.contentInput)}
+            onChange={handleWordSpacingChange}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Select value={currentStyles.whiteSpace || "normal"} onValueChange={handleWhiteSpaceChange}>
+            <SelectTrigger className={cn(styles.contentInput)}>
+              <SelectValue placeholder="White space" />
+            </SelectTrigger>
+            <SelectContent className="border-none bg-white">
+              {["normal", "nowrap", "pre", "pre-wrap", "pre-line", "break-spaces"].map((v) => (
+                <SelectItem key={v} value={v} className={styles.contentSelect}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={currentStyles.textOverflow || "clip"} onValueChange={handleTextOverflowChange}>
+            <SelectTrigger className={cn(styles.contentInput)}>
+              <SelectValue placeholder="Text overflow" />
+            </SelectTrigger>
+            <SelectContent className="border-none bg-white">
+              {["clip", "ellipsis"].map((v) => (
+                <SelectItem key={v} value={v} className={styles.contentSelect}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </FieldRow>
+
+      <FieldRow label="Text Shadow">
+        <TextShadowEditor value={currentStyles.textShadow || "none"} onChange={handleTextShadowChange} />
+      </FieldRow>
     </div>
   );
 }

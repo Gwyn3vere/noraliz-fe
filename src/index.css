@@ -64,3 +64,17 @@ body {
 .outline-dashed {
   outline-style: dashed;
 }
+
+/* React colorful */
+.react-colorful {
+  width: 220px !important;
+  gap: 5px !important;
+}
+
+.react-colorful__saturation {
+  border-bottom: none !important;
+}
+
+.react-colorful__hue {
+  height: 10px !important;
+}

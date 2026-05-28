@@ -19,6 +19,13 @@ import Content from "./Content/Content";
 import { Button } from "@/components/ui/button";
 import { useEditorStore } from "@/stores/editorStore";
 import type { ColumnsBlock, ContainerBlock } from "@/types";
+import Spacing from "./Properties/Spacing";
+import Layout from "./Properties/Layout";
+import Size from "./Properties/Size";
+import Position from "./Properties/Position";
+import Background from "./Properties/Background";
+import Border from "./Properties/Border";
+import Effects from "./Properties/Effects";
 
 export default function RighPanel() {
   const { selectedBlock, selectedColumnSectionId, selectedColumn, selectionType } = useSelectedElement();
@@ -41,12 +48,10 @@ export default function RighPanel() {
 
     if (selectionType === "block" && selectedBlock) {
       for (const section of currentPage.sections) {
-        // Block trực tiếp
         if (section.blocks.some((b) => b.id === selectedBlock.id)) {
           removeBlock(section.id, selectedBlock.id);
           return;
         }
-        // Block trong columns
         for (const block of section.blocks) {
           if (block.type === "columns") {
             const colsBlock = block as ColumnsBlock;
@@ -57,7 +62,6 @@ export default function RighPanel() {
               }
             }
           }
-          // Block trong container
           if (block.type === "container") {
             const container = block as ContainerBlock;
             if (container.children?.some((b) => b.id === selectedBlock.id)) {
@@ -132,23 +136,26 @@ export default function RighPanel() {
             <Property title="Typography">
               <Typography />
             </Property>
+            <Property title="Layout">
+              <Layout />
+            </Property>
             <Property title="Spacing">
-              <div>Have content yet</div>
+              <Spacing />
             </Property>
             <Property title="Size">
-              <div>Have content yet</div>
+              <Size />
             </Property>
             <Property title="Position">
-              <div>Have content yet</div>
+              <Position />
             </Property>
             <Property title="Background">
-              <div>Have content yet</div>
+              <Background />
             </Property>
             <Property title="Border">
-              <div>Have content yet</div>
+              <Border />
             </Property>
             <Property title="Effects">
-              <div>Have content yet</div>
+              <Effects />
             </Property>
           </div>
         ) : (

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { fontRegistry } from "@/lib/FontRegistry";
+import { fontRegistry } from "@/lib/fontRegistry";
 import type { Section, Block, ColumnsBlock } from "@/types";
 
 function collectFontsFromSections(sections: Section[]): string[] {
