@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from "axios";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -17,13 +16,39 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Hàng đợi cho các request đang chờ refresh token
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token);
+  });
+  failedQueue = [];
+};
+
 // Response interceptor: Xử lý refresh token khi 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers["Authorization"] = `Bearer ${token}`;
+          return api(originalRequest);
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
         const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true });
         const newToken = res.data.accessToken;
@@ -31,10 +56,11 @@ api.interceptors.response.use(
         if (currentUser) {
           useAuthStore.getState().setAuth(currentUser, newToken);
         }
+        processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Chỉ redirect nếu KHÔNG đang ở trang auth
+        processQueue(refreshError, null);
         const currentPath = window.location.pathname;
         const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
         if (!authPaths.includes(currentPath)) {
@@ -42,10 +68,29 @@ api.interceptors.response.use(
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
     return Promise.reject(error);
   },
 );
+
+// Chủ động refresh token khi ứng dụng khởi động (nếu cần)
+export async function initializeAuth() {
+  const store = useAuthStore.getState();
+  if (!store.accessToken) {
+    try {
+      const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true });
+      const newToken = res.data.accessToken;
+      const user = res.data.user;
+      if (user) {
+        useAuthStore.getState().setAuth(user, newToken);
+      }
+    } catch {
+      // Nếu refresh thất bại, giữ nguyên trạng thái (sẽ ở trang login)
+    }
+  }
+}
 
 export default api;
