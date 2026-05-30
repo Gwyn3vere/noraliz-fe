@@ -36,7 +36,7 @@ export function useRegister(): UseRegisterReturn {
       const data = await registerApi(email, password, fullName);
 
       if (data.accessToken && data.user) {
-        setAuth(data.user, data.accessToken);
+        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
         navigate("/dashboard", { replace: true });
       } else if (data.success === false) {
         setError(data.errorMessage || "Registration failed.");
