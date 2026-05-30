@@ -1,6 +1,8 @@
 import { BrowserRouter, useRoutes } from "react-router-dom";
 import { routes } from "../src/routers";
 import { useAuthLoader } from "@/components/hooks/useAuthLoader";
+import { useEffect } from "react";
+import { initializeAuth } from "./services/api";
 
 function AppRoutes() {
   return useRoutes(routes);
@@ -17,6 +19,9 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    initializeAuth();
+  }, []);
   return (
     <BrowserRouter>
       <AppContent />

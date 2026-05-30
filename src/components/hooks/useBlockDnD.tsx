@@ -97,7 +97,7 @@ function buildBlock(blockType: string, order: number, defaultProps: Record<strin
     type: blockType,
     order,
     defaultClass: `block-${uuidv4()}`,
-    classes: [] as string[],
+    classes: (defaultProps.classes as string[]) || [],
     props: defaultProps,
   };
 
