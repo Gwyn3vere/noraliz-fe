@@ -4,19 +4,23 @@ import { useAuthStore } from "@/stores/authStore";
 const api = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:5193/api/v1",
   headers: { "Content-Type": "application/json" },
-  withCredentials: true,
+  withCredentials: true, // vẫn gửi cookie nếu có (tương thích ngược)
 });
 
-// Request interceptor: Gắn access token
+// Request interceptor: gắn access token và refresh token
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const refreshToken = useAuthStore.getState().refreshToken;
+  if (refreshToken) {
+    config.headers["X-Refresh-Token"] = refreshToken;
+  }
   return config;
 });
 
-// Hàng đợi cho các request đang chờ refresh token
+// Hàng đợi refresh token
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -31,7 +35,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Response interceptor: Xử lý refresh token khi 401
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -50,14 +54,23 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true });
+        const refreshToken = useAuthStore.getState().refreshToken;
+        const res = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          {},
+          {
+            headers: { "X-Refresh-Token": refreshToken },
+            withCredentials: true,
+          },
+        );
         const newToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
-          useAuthStore.getState().setAuth(currentUser, newToken);
+          useAuthStore.getState().setAuth(currentUser, newToken, newRefreshToken);
         }
         processQueue(null, newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
@@ -76,19 +89,25 @@ api.interceptors.response.use(
   },
 );
 
-// Chủ động refresh token khi ứng dụng khởi động (nếu cần)
+// Khởi tạo auth khi app load
 export async function initializeAuth() {
   const store = useAuthStore.getState();
-  if (!store.accessToken) {
+  if (!store.accessToken && store.refreshToken) {
     try {
-      const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true });
-      const newToken = res.data.accessToken;
-      const user = res.data.user;
+      const res = await axios.post(
+        `${api.defaults.baseURL}/auth/refresh`,
+        {},
+        {
+          headers: { "X-Refresh-Token": store.refreshToken },
+          withCredentials: true,
+        },
+      );
+      const { accessToken, refreshToken, user } = res.data;
       if (user) {
-        useAuthStore.getState().setAuth(user, newToken);
+        useAuthStore.getState().setAuth(user, accessToken, refreshToken);
       }
     } catch {
-      // Nếu refresh thất bại, giữ nguyên trạng thái (sẽ ở trang login)
+      useAuthStore.getState().clearAuth();
     }
   }
 }
