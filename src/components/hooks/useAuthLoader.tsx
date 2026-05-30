@@ -17,7 +17,7 @@ export function useAuthLoader() {
       try {
         const data = await refreshTokenApi();
         if (data?.accessToken) {
-          setAuth(data?.user, data?.accessToken);
+          setAuth(data?.user, data?.accessToken, data?.refreshToken);
         }
       } catch {
         // Không cần làm gì, interceptor trong api.ts đã xử lý lỗi
