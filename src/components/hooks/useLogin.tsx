@@ -26,7 +26,7 @@ export function useLogin(): UseLoginReturn {
       const data = await loginApi(email, password);
 
       if (data.accessToken && data.user) {
-        setAuth(data.data.user, data.data.accessToken, data.data.refreshToken);
+        setAuth(data.user, data.accessToken, data.refreshToken);
 
         const redirectTo = searchParams.get("redirect") || "/dashboard";
         navigate(redirectTo, { replace: true });
