@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   ArrowUUpLeftIcon,
   ArrowUUpRightIcon,
@@ -33,9 +33,9 @@ import { useEditorStore } from "@/stores/editorStore";
 import { useDndContext } from "@dnd-kit/core";
 import { CanvasContext } from "./CanvasContext";
 import { StatusBar } from "./StatusBar";
+import { downloadHTML } from "@/helper/exportSerializer";
 
 function Canvas() {
-  const [projectName, setProjectName] = useState("Project name");
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const setReorderingSection = useEditorStore((state) => state.setReorderingSection);
 
@@ -46,7 +46,11 @@ function Canvas() {
   const setCurrentPage = useEditorStore((state) => state.setCurrentPage);
   const addPage = useEditorStore((state) => state.addPage);
   const removePage = useEditorStore((state) => state.removePage);
+  const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
+  const setActiveBreakpoint = useEditorStore((s) => s.setActiveBreakpoint);
   const pages = currentProject?.pages ?? [];
+
+  const [projectName, setProjectName] = useState(currentProject?.name);
 
   const dndContext = useDndContext();
   const isDragging = !!dndContext.active;
@@ -75,6 +79,18 @@ function Canvas() {
     [clearSelection],
   );
 
+  const handlePreview = useCallback(() => {
+    if (!currentProject) return;
+    localStorage.setItem("previewProject", JSON.stringify(currentProject));
+    window.open(`/preview/${currentProject.id}`, "_blank");
+  }, [currentProject]);
+
+  const handleExport = useCallback(() => {
+    if (currentProject) {
+      downloadHTML(currentProject, `${currentProject.name || "my-site"}.html`);
+    }
+  }, [currentProject]);
+
   const {
     zoom,
     panOffset,
@@ -99,6 +115,21 @@ function Canvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const canvasSize = useMemo(() => {
+    switch (activeBreakpoint) {
+      case "tablet":
+        return { width: 768, height: 820 };
+      case "mobile":
+        return { width: 375, height: 820 };
+      default: // base
+        return { width: 1440, height: 820 };
+    }
+  }, [activeBreakpoint]);
+
+  useEffect(() => {
+    handleFit();
+  }, [activeBreakpoint]);
+
   return (
     <CanvasContext.Provider value={{ panOffset, zoom }}>
       <div id="builder-canvas" className="relative flex-1 px-[40px] h-screen overflow-hidden">
@@ -112,10 +143,13 @@ function Canvas() {
         >
           <div className="h-screen flex items-center justify-center" onClick={handleCanvasClick}>
             <div
-              className={cn("origin-center rounded-[10px]", !isPanning && "transition-transform duration-300 ease-out")}
+              className={cn(
+                "origin-center rounded-[10px] relative",
+                !isPanning && "transition-transform duration-300 ease-out",
+              )}
               style={{
-                width: 1440,
-                height: 820,
+                width: canvasSize.width,
+                height: canvasSize.height,
 
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom / 100})`,
               }}
@@ -164,37 +198,37 @@ function Canvas() {
               </div>
               <div
                 className={cn(
-                  "relative h-[40px] flex items-center bg-[var(--color-light)] rounded-t-[10px] px-2",
+                  "h-[40px] flex items-center bg-[var(--color-light)] rounded-t-[10px] ",
                   "border-b border-[var(--color-dark)]/5",
+                  "grid grid-cols-[25%_auto_25%]",
                 )}
               >
                 {/* Left */}
                 <div className="flex items-center">
-                  <Button className="h-[40px] w-[40px]">
+                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
                     <CaretLeftIcon size={20} weight="bold" />
                   </Button>
 
-                  <Button className="h-[40px] w-[40px]">
+                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
                     <CaretRightIcon size={20} weight="bold" />
                   </Button>
 
-                  <Button className="h-[40px] w-[40px]">
+                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
                     <ArrowClockwiseIcon size={20} weight="bold" />
                   </Button>
                 </div>
 
                 {/* Center */}
-                <div className="absolute left-1/2 -translate-x-1/2">
-                  <div
-                    className={cn(
-                      "flex items-center px-2",
-                      "w-[560px] h-[40px] border-5 border-[var(--color-light)] bg-[var(--color-dark)]/5 rounded-[10px]",
-                    )}
-                  >
-                    <SlidersHorizontalIcon size={16} weight="bold" />
-                    <div className="flex-1 text-[13px] font-medium px-2">{currentPage.slug}</div>
-                    <CaretDownIcon size={16} weight="bold" />
-                  </div>
+
+                <div
+                  className={cn(
+                    "flex items-center px-2",
+                    "w-full h-[40px] border-5 border-[var(--color-light)] bg-[var(--color-dark)]/5 rounded-[10px]",
+                  )}
+                >
+                  <SlidersHorizontalIcon size={16} weight="bold" />
+                  <div className="flex-1 text-[13px] font-medium px-2">{currentPage.slug}</div>
+                  <CaretDownIcon size={16} weight="bold" />
                 </div>
 
                 {/* Right */}
@@ -233,14 +267,7 @@ function Canvas() {
           </div>
 
           {/* Preview */}
-          <Button
-            className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover)}
-            onClick={() => {
-              if (currentProject) {
-                window.open(`/preview/${currentProject.id}`, "_blank");
-              }
-            }}
-          >
+          <Button className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover)} onClick={handlePreview}>
             <ArrowSquareOutIcon size={20} weight="fill" />
             <span className={styles.canvasText}>Priview in new tab</span>
           </Button>
@@ -255,7 +282,7 @@ function Canvas() {
           </Button>
 
           {/* Export */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonBorder)}>
+          <Button className={cn(styles.canvasButton, styles.canvasButtonBorder)} onClick={handleExport}>
             <span className={cn(styles.canvasText, "text-white")}>Export project</span>
           </Button>
 
@@ -270,13 +297,37 @@ function Canvas() {
         <Interaction position="bottom-[20px] left-1/2 -translate-x-1/2">
           {/* View mode */}
           <div className={cn(styles.canvasButton, styles.canvasViewMode)}>
-            <Button className={cn(styles.canvasButtonView, styles.canvasButton, "!bg-[var(--color-primary)]")}>
-              <DesktopIcon size={20} weight="fill" className="text-white" />
+            <Button
+              className={cn(
+                styles.canvasButton,
+                styles.canvasButtonView,
+                styles.canvasButtonHover,
+                activeBreakpoint === "base" && "!bg-[var(--color-primary)] text-white",
+              )}
+              onClick={() => setActiveBreakpoint("base")}
+            >
+              <DesktopIcon size={20} weight="fill" />
             </Button>
-            <Button className={cn(styles.canvasButton, styles.canvasButtonView, styles.canvasButtonHover)}>
+            <Button
+              className={cn(
+                styles.canvasButton,
+                styles.canvasButtonView,
+                styles.canvasButtonHover,
+                activeBreakpoint === "tablet" && "!bg-[var(--color-primary)] text-white",
+              )}
+              onClick={() => setActiveBreakpoint("tablet")}
+            >
               <DeviceTabletSpeakerIcon size={20} weight="fill" />
             </Button>
-            <Button className={cn(styles.canvasButton, styles.canvasButtonView, styles.canvasButtonHover)}>
+            <Button
+              className={cn(
+                styles.canvasButton,
+                styles.canvasButtonView,
+                styles.canvasButtonHover,
+                activeBreakpoint === "mobile" && "!bg-[var(--color-primary)] text-white",
+              )}
+              onClick={() => setActiveBreakpoint("mobile")}
+            >
               <DeviceMobileSpeakerIcon size={20} weight="fill" />
             </Button>
           </div>

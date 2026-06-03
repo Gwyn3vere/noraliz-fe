@@ -4,6 +4,7 @@ import type { DragEndEvent, DragStartEvent, DragOverEvent, CollisionDetection } 
 import { v4 as uuidv4 } from "uuid";
 import { useEditorStore } from "@/stores/editorStore";
 import type { PrimitiveBlock, Section, Block, ColumnBlock, ColumnsBlock, ContainerBlock } from "@/types";
+import { normalizeStyles } from "@/helper/normalizeStyles";
 
 interface UseBlockDnDProps {
   primitiveBlocks: PrimitiveBlock[];
@@ -88,6 +89,14 @@ function getDropPoint(event: DragEndEvent): { dropX: number; dropY: number } {
 // ─── Helper: tạo block mới ────────────────────────────────────────────────────
 
 function buildBlock(blockType: string, order: number, defaultProps: Record<string, unknown>): Block {
+  const rawStyles = (defaultProps as any).styles ?? {};
+  const normalizedStyles = normalizeStyles(rawStyles);
+
+  const normalizedProps = {
+    ...defaultProps,
+    styles: normalizedStyles,
+  };
+
   const isColumns = blockType === "columns";
   const isContainer = blockType === "container";
   const count = isColumns ? (defaultProps.count as number) || 2 : 0;
@@ -98,7 +107,7 @@ function buildBlock(blockType: string, order: number, defaultProps: Record<strin
     order,
     defaultClass: `block-${uuidv4()}`,
     classes: (defaultProps.classes as string[]) || [],
-    props: defaultProps,
+    props: normalizedProps,
   };
 
   if (isColumns) {
@@ -107,7 +116,7 @@ function buildBlock(blockType: string, order: number, defaultProps: Record<strin
       type: "column" as const,
       order: i,
       blocks: [],
-      props: { styles: { flex: "1" } },
+      props: { styles: { base: { flex: "1" } } },
     }));
     return { ...base, children } as unknown as Block;
   }
@@ -215,7 +224,7 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
 
         const currentPage = store.getCurrentPage();
         const sections = currentPage?.sections || [];
-        let order = sections.length; // mặc định cuối
+        let order = sections.length;
 
         if (overData.order !== undefined) {
           order = overData.order;
@@ -228,11 +237,16 @@ export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
             : blockApi.defaultProps
           : {};
 
+        const normalizedProps = {
+          ...defaultProps,
+          styles: normalizeStyles((defaultProps as any).styles ?? {}),
+        };
+
         const newSection: Section = {
           id: uuidv4(),
           templateId: blockType,
           order,
-          props: defaultProps,
+          props: normalizedProps,
           blocks: [],
         };
         store.addSection(newSection, order);

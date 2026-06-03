@@ -1,14 +1,16 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useEditorStore } from "@/stores/editorStore";
 import { useBlockDrop } from "./useBlockDrop";
 import { useBlockReorder } from "./useBlockReorder";
 import type { Block } from "@/types";
 import { cn } from "@/lib/utils";
+import { normalizeStyles } from "@/helper/normalizeStyles";
 
 export function useBlockInteraction(block: Block, sectionId: string, columnId?: string, containerId?: string) {
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const reorderingSectionId = useEditorStore((s) => s.reorderingSectionId);
+  const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
 
   const isReorderMode = reorderingSectionId === sectionId;
   const isSelected = selectedBlockId === block.id;
@@ -36,7 +38,18 @@ export function useBlockInteraction(block: Block, sectionId: string, columnId?: 
   );
 
   const rawStyles = (block as any).props?.styles || {};
-  const { transform, ...restStyles } = rawStyles;
+  const normalizedStyles = normalizeStyles(rawStyles);
+
+  const currentStyles = useMemo(() => {
+    const base = normalizedStyles.base || {};
+    if (activeBreakpoint === "base") return base;
+    if (activeBreakpoint === "tablet") return { ...base, ...(normalizedStyles.tablet ?? {}) };
+    if (activeBreakpoint === "mobile")
+      return { ...base, ...(normalizedStyles.tablet ?? {}), ...(normalizedStyles.mobile ?? {}) };
+    return base;
+  }, [normalizedStyles, activeBreakpoint]);
+
+  const { transform, ...restStyles } = currentStyles;
 
   const style: React.CSSProperties = {
     ...restStyles,

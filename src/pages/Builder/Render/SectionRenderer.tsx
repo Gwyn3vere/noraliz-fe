@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
 import type { Section } from "@/types";
 import { FloatingSectionToolbar } from "../FloatingSectionToolbar";
 import { useSectionDrop } from "@/components/hooks/useSectionDrop";
 import { BlockRenderer } from "./BlockRenderer";
+import { normalizeStyles } from "@/helper/normalizeStyles";
 
 export function SectionRenderer({ section }: { section: Section }) {
   const selectedSectionId = useEditorStore((state) => state.selectedSectionId);
@@ -12,10 +13,23 @@ export function SectionRenderer({ section }: { section: Section }) {
   const isSelected = selectedSectionId === section.id;
   const [isHovered, setIsHovered] = useState(false);
 
+  const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
+  const rawStyles = (section.props as any)?.styles ?? {};
+  const normalizedStyles = normalizeStyles(rawStyles);
+
+  const currentStyles = useMemo(() => {
+    const base = normalizedStyles.base || {};
+    if (activeBreakpoint === "base") return base;
+    if (activeBreakpoint === "tablet") return { ...base, ...(normalizedStyles.tablet ?? {}) };
+    if (activeBreakpoint === "mobile")
+      return { ...base, ...(normalizedStyles.tablet ?? {}), ...(normalizedStyles.mobile ?? {}) };
+    return base;
+  }, [normalizedStyles, activeBreakpoint]);
+
   const { setNodeRef, isOver } = useSectionDrop(section.id);
 
   const sectionStyles: React.CSSProperties = {
-    ...(section.props as any)?.styles,
+    ...currentStyles,
   };
 
   const showOutline = isHovered || isSelected;
