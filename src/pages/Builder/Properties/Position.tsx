@@ -65,7 +65,7 @@ function Position() {
             <SelectValue placeholder="static" />
           </SelectTrigger>
           <SelectContent className="border-none bg-white">
-            {["static", "relative", "absolute", "fixed", "sticky"].map((v) => (
+            {["static", "relative", "absolute", "sticky"].map((v) => (
               <SelectItem key={v} value={v} className={styles.contentSelect}>
                 {v}
               </SelectItem>

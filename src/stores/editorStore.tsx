@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Project, Page, Section, Block, ColumnsBlock, ContainerBlock } from "@/types";
+import type { Project, Page, Section, Block, ColumnsBlock, ContainerBlock, ColumnBlock } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { updateBlockRecursive } from "@/helper/updateBlockRecursive";
 
@@ -27,6 +27,12 @@ interface EditorState {
   // ─── Reorder ───
   reorderingSectionId: string | null;
 
+  // ─── Breakpoint ───
+  activeBreakpoint: "base" | "tablet" | "mobile";
+
+  // ─── Actions: Breakpoint ───
+  setActiveBreakpoint: (breakpoint: "base" | "tablet" | "mobile") => void;
+
   // ─── Actions: Project ───
   setCurrentProject: (project: Project) => void;
 
@@ -49,6 +55,7 @@ interface EditorState {
   addBlockToColumn: (sectionId: string, columnId: string, block: Block, order: number) => void;
   addBlockToContainer: (sectionId: string, containerId: string, block: Block, order: number) => void;
   selectColumn: (columnId: string | null, sectionId?: string) => void;
+  updateColumn: (sectionId: string, columnId: string, updater: (col: ColumnBlock) => ColumnBlock) => void;
   removeColumn: (sectionId: string, columnId: string) => void;
 
   // ─── Actions: Inline Editing ───
@@ -101,6 +108,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   future: [],
   isDirty: false,
   lastSavedAt: null,
+  activeBreakpoint: "base",
 
   // ─── Project ───
   setCurrentProject: (project) => {
@@ -167,6 +175,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   // ─── Reorder ───
   setReorderingSection: (sectionId) => set({ reorderingSectionId: sectionId }),
+
+  // ─── Breakpoint ───
+  setActiveBreakpoint: (breakpoint) => set({ activeBreakpoint: breakpoint }),
 
   // ─── History Helpers ───
   pushToHistory: () => {
@@ -507,6 +518,39 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       },
       isDirty: true,
     }));
+  },
+
+  updateColumn: (sectionId: string, columnId: string, updater: (col: ColumnBlock) => ColumnBlock) => {
+    const { pushToHistory } = get();
+    pushToHistory();
+    set((state) => {
+      const updatedPages = state.currentProject!.pages.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          return {
+            ...section,
+            blocks: section.blocks.map((block) => {
+              if (block.type === "columns" && "children" in block) {
+                const colsBlock = block as ColumnsBlock;
+                return {
+                  ...colsBlock,
+                  children: colsBlock.children.map((col) => {
+                    if (col.id === columnId) return updater(col);
+                    return col;
+                  }),
+                };
+              }
+              return block;
+            }),
+          };
+        }),
+      }));
+      return {
+        currentProject: { ...state.currentProject!, pages: updatedPages },
+        isDirty: true,
+      };
+    });
   },
 
   moveBlockBetweenColumns: (sectionId, fromColumnId, toColumnId, blockId, toIndex) => {

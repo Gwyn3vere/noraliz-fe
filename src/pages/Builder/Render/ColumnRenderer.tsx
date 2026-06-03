@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
 import type { ColumnsBlock } from "@/types";
@@ -6,6 +6,7 @@ import { useColumnDrop } from "@/components/hooks/useColumnDrop";
 import { useColumnReorder } from "@/components/hooks/useColumnReorder";
 import { useDndContext } from "@dnd-kit/core";
 import { BlockRenderer } from "./BlockRenderer";
+import { normalizeStyles } from "@/helper/normalizeStyles";
 
 export function ColumnRenderer({
   column,
@@ -35,12 +36,25 @@ export function ColumnRenderer({
   const isSelected = selectedColumnId === column.id;
   const [isHovered, setIsHovered] = useState(false);
 
+  const activeBreakpoint = useEditorStore((s) => s.activeBreakpoint);
+  const rawStyles = (column as any).props?.styles ?? {};
+  const normalizedStyles = useMemo(() => normalizeStyles(rawStyles), [rawStyles]);
+
+  const currentStyles = useMemo(() => {
+    const base = normalizedStyles.base || {};
+    if (activeBreakpoint === "base") return base;
+    if (activeBreakpoint === "tablet") return { ...base, ...(normalizedStyles.tablet ?? {}) };
+    if (activeBreakpoint === "mobile")
+      return { ...base, ...(normalizedStyles.tablet ?? {}), ...(normalizedStyles.mobile ?? {}) };
+    return base;
+  }, [normalizedStyles, activeBreakpoint]);
+
   const { active } = useDndContext();
   const isDraggingColumns = active?.data.current?.blockType === "columns";
 
   const columnStyles: React.CSSProperties = {
     flex: "1",
-    ...(column as any).props?.styles,
+    ...currentStyles,
   };
 
   const showOutline = isHovered || isSelected;
