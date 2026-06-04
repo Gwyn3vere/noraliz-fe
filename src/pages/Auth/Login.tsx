@@ -20,8 +20,8 @@ export default function Login() {
   const { login, isLoading, error, clearError } = useLogin();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("test@example.com");
+  const [password, setPassword] = useState("Strong@123");
   const [isShowPassword, setIsShowPassword] = useState(false);
 
   if (isAuthenticated) {
