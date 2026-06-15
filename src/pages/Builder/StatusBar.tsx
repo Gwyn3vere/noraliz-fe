@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { builderStyles as styles } from "./Builder.styles";
 import { useEditorStore } from "@/stores/editorStore";
+import { cn } from "@/lib/utils";
 
 export function StatusBar({
   isSaving,
@@ -40,7 +41,7 @@ export function StatusBar({
   else if (isDirty && !isSaving && lastSavedAt) status = "Unsaved changes";
 
   return (
-    <div className={styles.canvasStatus}>
+    <div className={cn(styles.canvasStatus, styles.canvasButtonShadow, styles.canvasButtonBorder)}>
       <span>{status}</span>
       <span className="text-[var(--color-dark)]/20">|</span>
       <span>

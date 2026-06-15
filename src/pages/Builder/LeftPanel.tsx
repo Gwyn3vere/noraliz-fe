@@ -77,8 +77,8 @@ export default function LeftPanel() {
   }, [apiBlocks]);
 
   return (
-    <div className="relative">
-      <aside className={styles.lPanelContainer}>
+    <div className={cn("relative h-screen p-2")}>
+      <aside className={cn(styles.lPanelContainer, styles.canvasButtonBorder, styles.canvasButtonShadow)}>
         {/* Logo */}
         <div className={styles.lPanelLogoBlock}>
           <div className={styles.lPanelLogoLayout}>
