@@ -166,6 +166,8 @@ function Canvas() {
                       page.id === currentPageId
                         ? "bg-[var(--color-light)] text-[var(--color-dark)] font-medium"
                         : "bg-[var(--color-dark)]/5 text-[var(--color-dark)]/50 hover:bg-[var(--color-dark)]/10",
+                      styles.canvasButtonShadow,
+                      styles.canvasButtonBorder,
                     )}
                   >
                     <span className="px-3 font-medium text-[13px]">{page.name}</span>
@@ -190,68 +192,85 @@ function Canvas() {
                   className={cn(
                     "w-[30px] h-[30px] text-[10px] !rounded-[10px] bg-[var(--color-dark)]/5",
                     "hover:bg-[var(--color-dark)]/10",
+                    styles.canvasButtonShadow,
+                    styles.canvasButtonBorder,
                   )}
                   onClick={addPage}
                 >
                   <PlusIcon size={10} />
                 </Button>
               </div>
-              <div
-                className={cn(
-                  "h-[40px] flex items-center bg-[var(--color-light)] rounded-t-[10px] ",
-                  "border-b border-[var(--color-dark)]/5",
-                  "grid grid-cols-[25%_auto_25%]",
-                )}
-              >
-                {/* Left */}
-                <div className="flex items-center">
-                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
-                    <CaretLeftIcon size={20} weight="bold" />
-                  </Button>
-
-                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
-                    <CaretRightIcon size={20} weight="bold" />
-                  </Button>
-
-                  <Button className="h-[40px] !w-[30px] !md:w-[40px]">
-                    <ArrowClockwiseIcon size={20} weight="bold" />
-                  </Button>
-                </div>
-
-                {/* Center */}
-
+              <div className={cn(styles.canvasButtonBorder, styles.canvasButtonShadow, "rounded-[10px]")}>
                 <div
                   className={cn(
-                    "flex items-center px-2",
-                    "w-full h-[40px] border-5 border-[var(--color-light)] bg-[var(--color-dark)]/5 rounded-[10px]",
+                    "h-[40px] flex items-center bg-[var(--color-light)] rounded-t-[10px] ",
+                    "border-b border-[var(--color-dark)]/5",
+                    "grid grid-cols-[25%_auto_25%]",
                   )}
                 >
-                  <SlidersHorizontalIcon size={16} weight="bold" />
-                  <div className="flex-1 text-[13px] font-medium px-2">{currentPage.slug}</div>
-                  <CaretDownIcon size={16} weight="bold" />
-                </div>
+                  {/* Left */}
+                  <div className="flex items-center">
+                    <Button className="h-[40px] !w-[30px] !md:w-[40px]">
+                      <CaretLeftIcon size={20} weight="bold" />
+                    </Button>
 
-                {/* Right */}
-                <div className="ml-auto">
-                  <Button className="h-[40px] w-[40px]">
-                    <GearIcon size={20} weight="fill" />
-                  </Button>
-                </div>
-              </div>
+                    <Button className="h-[40px] !w-[30px] !md:w-[40px]">
+                      <CaretRightIcon size={20} weight="bold" />
+                    </Button>
 
-              <div className="bg-white rounded-b-[10px]" style={{ minHeight: "auto" }}>
-                <CanvasRenderer />
+                    <Button className="h-[40px] !w-[30px] !md:w-[40px]">
+                      <ArrowClockwiseIcon size={20} weight="bold" />
+                    </Button>
+                  </div>
+
+                  {/* Center */}
+
+                  <div
+                    className={cn(
+                      "flex items-center px-2",
+                      "w-full h-[40px] border-5 border-[var(--color-light)] bg-[var(--color-dark)]/5 rounded-[10px]",
+                    )}
+                  >
+                    <SlidersHorizontalIcon size={16} weight="bold" />
+                    <div className="flex-1 text-[13px] font-medium px-2">{currentPage.slug}</div>
+                    <CaretDownIcon size={16} weight="bold" />
+                  </div>
+
+                  {/* Right */}
+                  <div className="ml-auto">
+                    <Button className="h-[40px] w-[40px]">
+                      <GearIcon size={20} weight="fill" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="bg-white rounded-b-[10px]" style={{ minHeight: "auto" }}>
+                  <CanvasRenderer />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <Interaction position="top-[20px] left-[40px]">
+        <Interaction position="top-2 left-[40px]">
           {/* Undo - Redo */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <ArrowUUpLeftIcon size={20} weight="bold" />
           </Button>
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <ArrowUUpRightIcon size={20} weight="bold" />
           </Button>
 
@@ -262,41 +281,91 @@ function Canvas() {
               type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className={styles.canvasProjectInput}
+              className={cn(styles.canvasProjectInput, styles.canvasButtonBorder, styles.canvasButtonShadow)}
             />
           </div>
 
           {/* Preview */}
-          <Button className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover)} onClick={handlePreview}>
+          <Button
+            className={cn(
+              "!w-[170px]",
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              styles.canvasButtonShadow,
+            )}
+            onClick={handlePreview}
+          >
             <ArrowSquareOutIcon size={20} weight="fill" />
             <span className={styles.canvasText}>Priview in new tab</span>
           </Button>
         </Interaction>
-        <Interaction position="top-[20px] right-[40px]">
+
+        <Interaction position="top-2 right-[40px]">
           {/* Save - Publish */}
-          <Button onClick={performSave} className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            onClick={performSave}
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <UploadIcon size={20} weight="fill" />
           </Button>
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <BookOpenTextIcon size={20} weight="fill" />
           </Button>
 
           {/* Export */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonBorder)} onClick={handleExport}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonBorder,
+              styles.canvasButtonExport,
+              styles.canvasButtonShadow,
+            )}
+            onClick={handleExport}
+          >
             <span className={cn(styles.canvasText, "text-white")}>Export project</span>
           </Button>
 
           {/* Tooltip */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <WrenchIcon size={20} weight="fill" />
           </Button>
         </Interaction>
-        <Interaction position="bottom-[20px] left-[40px]">
+
+        <Interaction position="bottom-2 left-[40px]">
           <StatusBar isSaving={isSaving} lastSavedAt={lastSavedAt} isDirty={isDirty} />
         </Interaction>
-        <Interaction position="bottom-[20px] left-1/2 -translate-x-1/2">
+
+        <Interaction position="bottom-2 left-1/2 -translate-x-1/2">
           {/* View mode */}
-          <div className={cn(styles.canvasButton, styles.canvasViewMode)}>
+          <div
+            className={cn(
+              styles.canvasButton,
+              styles.canvasViewMode,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+              "overflow-hidden",
+            )}
+          >
             <Button
               className={cn(
                 styles.canvasButton,
@@ -332,14 +401,22 @@ function Canvas() {
             </Button>
           </div>
         </Interaction>
-        <Interaction position="bottom-[20px] right-[40px]">
+
+        <Interaction position="bottom-2 right-[40px]">
           {/* Layer */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <StackIcon size={20} weight="fill" />
           </Button>
 
           {/* Zoom bar */}
-          <div className={styles.canvasZoombar}>
+          <div className={cn(styles.canvasZoombar, styles.canvasButtonShadow, styles.canvasButtonBorder)}>
             <Button
               onClick={handleZoomOut}
               className={cn(styles.canvasButton, styles.canvasButtonHover, "!shadow-none")}
@@ -358,10 +435,25 @@ function Canvas() {
           </div>
 
           {/* Fit - Fullscreen */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <ArrowsOutIcon size={20} weight="fill" />
           </Button>
-          <Button onClick={handleFit} className={cn(styles.canvasButton, styles.canvasButtonHover)}>
+          <Button
+            onClick={handleFit}
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonShadow,
+              styles.canvasButtonBorder,
+            )}
+          >
             <span className={styles.canvasText}>Fit</span>
           </Button>
         </Interaction>
