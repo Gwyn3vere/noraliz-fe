@@ -6,6 +6,8 @@ export const contentStyles = {
     "flex items-center justify-center",
     "h-[34px] rounded-md cursor-pointer transition-colors text-[12px] text-white",
     "bg-[var(--color-primary)]/90 hover:bg-[var(--color-primary)]",
+    "border-2 border-[var(--color-dark)]",
+    "shadow-[var(--shadow-brutalism-xs)]",
   ),
   contentInput: cn("!w-full !h-[26px] !rounded-[6px] !text-[11px] border-none bg-[var(--color-primary)]/10"),
   contentSelect: cn("text-[11px] cursor-pointer hover:bg-[var(--color-primary)]/10"),

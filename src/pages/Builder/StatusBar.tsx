@@ -41,7 +41,7 @@ export function StatusBar({
   else if (isDirty && !isSaving && lastSavedAt) status = "Unsaved changes";
 
   return (
-    <div className={cn(styles.canvasStatus, styles.canvasButtonShadow, styles.canvasButtonBorder)}>
+    <div className={cn(styles.canvasStatus, styles.canvasButtonShadow)}>
       <span>{status}</span>
       <span className="text-[var(--color-dark)]/20">|</span>
       <span>
