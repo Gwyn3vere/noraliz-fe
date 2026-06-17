@@ -86,8 +86,8 @@ export default function RighPanel() {
   const canRemove = selectionType === "block" || selectionType === "column";
 
   return (
-    <div className=" h-screen p-2 overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <aside className={cn("relative", styles.lPanelContainer, styles.canvasButtonBorder, styles.canvasButtonShadow)}>
+    <div className=" h-screen overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <aside className={cn("relative", styles.lPanelContainer, styles.canvasButtonShadow)}>
         <div className="p-[20px] border-b border-[var(--color-dark)]/10">
           <div className="flex items-center gap-[5px]">
             <CirclesFourIcon size={20} weight="fill" />
@@ -109,25 +109,45 @@ export default function RighPanel() {
             </Property>
 
             <div className="flex items-center justify-between px-[20px] pt-[20px]">
-              <div className="flex items-center w-auto h-auto bg-[var(--color-dark)] rounded-[10px]">
-                <Button className="bg-[var(--color-primary)] !rounded-[10px] !w-[40px] !h-[40px] border-3 border-[var(--color-dark)]">
+              <div
+                className={cn(
+                  "flex items-center w-auto h-[40px] overflow-hidden bg-[var(--color-light)] rounded-[10px]",
+                  "shadow-[var(--shadow-brutalism-xs)]",
+                  "border-2 border-[var(--color-dark)]",
+                )}
+              >
+                <Button className="bg-[var(--color-primary)] !rounded-[8px] !w-[40px] !h-[40px]">
                   <CubeFocusIcon size={20} weight="fill" className="text-white" />
                 </Button>
                 <Button className="bg-transparent !w-[40px] !h-[40px] border-2 border-transparent">
-                  <CodeIcon size={20} weight="bold" className="text-white" />
+                  <CodeIcon size={20} weight="bold" />
                 </Button>
               </div>
 
               <div className="flex items-center gap-[5px]">
-                <Button className="bg-[var(--color-dark)] !rounded-[10px] !w-[40px] !h-[40px] hover:bg-[var(--color-primary)] transition-all">
-                  <CopySimpleIcon size={20} weight="fill" className="text-white" />
+                <Button
+                  className={cn(
+                    "bg-[var(--color-light)] !rounded-[10px] !w-[40px] !h-[40px]",
+                    "hover:bg-[var(--color-primary)] transition-all",
+                    "shadow-[var(--shadow-brutalism-xs)]",
+                    "border-2 border-[var(--color-dark)]",
+                    "text-[var(--color-dark)] hover:text-white",
+                  )}
+                >
+                  <CopySimpleIcon size={20} weight="fill" />
                 </Button>
                 {canRemove && (
                   <Button
                     onClick={handleRemove}
-                    className="bg-[var(--color-dark)] !rounded-[10px] !w-[40px] !h-[40px] hover:bg-red-500 transition-all"
+                    className={cn(
+                      "bg-[var(--color-light)] !rounded-[10px] !w-[40px] !h-[40px]",
+                      "hover:bg-[var(--color-primary)] transition-all",
+                      "shadow-[var(--shadow-brutalism-xs)]",
+                      "border-2 border-[var(--color-dark)]",
+                      "text-[var(--color-dark)] hover:text-white",
+                    )}
                   >
-                    <TrashIcon size={20} weight="fill" className="text-white" />
+                    <TrashIcon size={20} weight="fill" />
                   </Button>
                 )}
               </div>
