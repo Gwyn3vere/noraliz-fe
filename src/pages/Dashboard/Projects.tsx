@@ -43,13 +43,13 @@ export default function Projects() {
     );
   }
 
-  return projects.length === 0 ? (
+  return projects?.length === 0 ? (
     <EmptySpace
       icon={images.emptyProjects}
       title="Ready to build?"
       content='Your canvas is waiting. Click "Create new project" to turn your vision into reality.'
       button={
-        <Button className={styles.emptyButton} onClick={handleCreateProject}>
+        <Button className={cn(styles.emptyButton, styles.inputSearch)} onClick={handleCreateProject}>
           <CirclePlus strokeWidth={3} />
           Create new project
         </Button>
@@ -60,6 +60,7 @@ export default function Projects() {
       <div className={styles.contentContainer}>
         <div className="pt-[40px] pb-[20px] md:py-[40px]">
           <Control
+            tabname="Projects"
             button={
               <Button className={styles.emptyButton} onClick={handleCreateProject}>
                 <CirclePlus strokeWidth={3} />
@@ -118,7 +119,7 @@ const ProjectCard = memo(function ProjectCard({ project, onDelete }: ProjectCard
       {/* Project infomation */}
       <div className="px-2.5">
         <div className=" flex items-center justify-between my-1">
-          <div className="text-[20px] font-bold truncate mb-2">{project.name}</div>
+          <div className="text-[16px] font-bold truncate my-2">{project.name}</div>
           <Button className={styles.metaButton} onClick={() => setOptionsOpen((prev) => !prev)}>
             <Ellipsis size={24} strokeWidth={3} />
           </Button>
