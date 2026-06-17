@@ -4,6 +4,7 @@ import type { TabMenuType } from "@/types";
 import { TAB_MENU } from "@/constants/tabMenu";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
 
 const cx = classNames.bind(styles);
 
@@ -36,13 +37,17 @@ export default function Navigation({ tab, onChangeTab }: Props) {
           );
         })}
       </div>
-      <div className="relative block md:hidden">
+      <div className={cn("relative block md:hidden", styles.inputSearch)}>
         <MagnifyingGlassIcon
           size={17}
           weight="bold"
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[var(--color-dark)]/40"
         />
-        <Input type="search" placeholder=" Search..." className="pl-9 my-2 w-full" />
+        <Input
+          type="search"
+          placeholder=" Search..."
+          className={cn("pl-9 w-full !h-[40px] !border-2 !border-[var(--color-dark)]")}
+        />
       </div>
     </nav>
   );

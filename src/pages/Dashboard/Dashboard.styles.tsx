@@ -34,11 +34,13 @@ const emptyButtonBase =
 const contentSpace = "mt-[160px]";
 
 // card
-const cardBase = "bg-[var(--color-light)] rounded-[20px] shadow-[var(--shadow-xs)]";
+const cardBase = "bg-[var(--color-light)] rounded-[10px]";
+const cardShadow = "!shadow-[var(--shadow-brutalism-xs)]";
 const cardSize = "w-auto h-auto";
+const cardBorder = "border border-[var(--color-dark)]";
 
-const cardThumbBase = "bg-[var(--color-dark)]/5 rounded-[20px] border-5 md:border-10 border-white";
-const cardThumbSize = "w-full h-[280px]";
+const cardThumbBase = "bg-[var(--color-dark)]/5";
+const cardThumbSize = "w-full h-[200px]";
 
 // asset
 const assetBase = "bg-[var(--color-light)] shadow-[var(--shadow-sm)] rounded-[30px] overflow-hidden";
@@ -57,7 +59,7 @@ const imgTrans = "transition-all duration-300";
 const imgLoading = "absolute inset-0";
 
 // metadata
-const metaBase = "text-[13px] xl:text-[15px] text-[var(--color-dark)]/50 py-3";
+const metaBase = "text-[13px] xl:text-[15px] text-[var(--color-dark)]/50 py-1";
 const metaLayout = "flex items-center gap-[20px]";
 
 const metaButtonBase = "cursor-pointer hover:bg-[var(--color-primary)] hover:text-white !rounded-[10px]";
@@ -71,17 +73,21 @@ export const dashboardStyles = {
   wrapper: cn(wrapperLayout, wrapperSize),
   empty: cn(emptyBase, emptyLayout, emptySize),
   emptyText: cn(emptyTextBase, emptyTextLayout),
-  emptyButton: cn(emptyButtonBase),
+  emptyButton: cn(emptyButtonBase, cardBorder, cardShadow),
+
+  inputSearch: cn("rounded-[10px]", cardBorder, cardShadow),
 
   contentContainer: cn("h-full", navSpace, contentSpace),
 
-  cardContainer: cn(cardBase, cardSize),
+  cardContainer: cn(cardBase, cardSize, cardBorder, cardShadow),
   cardThumb: cn(cardThumbBase, cardThumbSize),
   cardHover: cn(assetHover, cardThumbSize, imgLoading, cardThumbBase, imgTrans, wrapperLayout),
   cardButton: cn(
     "bg-[var(--color-primary)] py-4 px-6 rounded-[10px] " +
       "font-medium text-[14px] text-white" +
       " flex items-center gap-1",
+    cardBorder,
+    cardShadow,
   ),
 
   assetContainer: cn(assetBase, assetPosition),

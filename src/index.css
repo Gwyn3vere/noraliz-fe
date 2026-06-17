@@ -1,10 +1,12 @@
 @import "tailwindcss";
 @import "./assets/fonts/switzer.css";
 @import "./assets/fonts/clash-display.css";
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
 
 @theme {
   --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
   --font-display: "ClashDisplay", ui-sans-serif, system-ui, sans-serif;
+  --font-bebas: "Bebas Neue", sans-serif;
 }
 
 :root {
@@ -22,7 +24,9 @@
 
   --shadow-sm: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   --shadow-xs: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+
   --shadow-brutalism-xs: 4px 4px 0px 0px var(--color-dark);
+  --shadow-brutalism: 4px 4px 0px 0px var(--color-dark);
 }
 
 html {
