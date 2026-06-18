@@ -74,7 +74,7 @@ export default function Projects() {
           <Control
             tabname="Projects"
             total={projects?.length}
-            editedTime={formatEditedTime(latestProject.updatedAt)}
+            editedTime={formatEditedTime(latestProject?.updatedAt)}
             button={
               <Button className={cn(styles.emptyButton, "w-full")} onClick={handleCreateProject}>
                 <CirclePlus strokeWidth={3} />
