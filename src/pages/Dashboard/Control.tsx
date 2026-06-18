@@ -17,24 +17,33 @@ import { Button } from "@/components/ui/button";
 interface ControlProps {
   tabname?: string;
   button?: React.ReactNode;
+  total?: number;
+  editedTime?: string;
 }
 
 const FILTER_MENU = ["All", "Draft", "Published", "Archived"];
 const SORT_OPTIONS = ["Recently edited", "Oldest first", "Name A-Z"];
 const STATUS_OPTIONS = ["All status", "Draft", "Published"];
 
-export default function Control({ tabname, button }: ControlProps) {
+export default function Control({ tabname, button, total, editedTime }: ControlProps) {
   const [filter, setFilter] = useState("All");
   const [sort, setSort] = useState("Recently edited");
   const [status, setStatus] = useState("All status");
   return (
     <div className="">
-      <div className="flex items-center gap-[5px] md:gap-[10px]">
+      <div className="mb-10 space-y-2">
         <div className="font-black text-[35px] uppercase">{tabname}</div>
+        <div
+          className={cn("flex items-center gap-5", "font-semibold text-[14px] text-[var(--color-dark)]/70 uppercase")}
+        >
+          {total && <div>{total} projects</div>}
+          {editedTime && <span>•</span>}
+          {editedTime && <div>Last {editedTime}</div>}
+        </div>
       </div>
 
-      <div className="flex items-end justify-between">
-        <div className="flex items-end gap-10">
+      <div className="md:flex items-end justify-between">
+        <div className="grid grid-cols-2 gap-2 md:flex items-end md:gap-10">
           <Optional title="View">
             <div
               className={cn(
@@ -43,15 +52,15 @@ export default function Control({ tabname, button }: ControlProps) {
                 "shadow-[var(--shadow-brutalism-xs)]",
               )}
             >
-              <Button className="w-[40px] h-[40px] bg-[var(--color-primary)]">
+              <Button className="w-full md:w-[40px] h-[40px] bg-[var(--color-primary)]">
                 <SquaresFourIcon weight="fill" className="text-[var(--color-light)]" />
               </Button>
-              <Button className="w-[40px] h-[40px]">
+              <Button className="w-full md:w-[40px] h-[40px]">
                 <ListDashesIcon weight="bold" />
               </Button>
             </div>
           </Optional>
-          <div className="h-[40px] w-[1px] bg-[var(--color-dark)]/50" />
+          <div className="hidden md:block h-[40px] w-[1px] bg-[var(--color-dark)]/50" />
           <Optional title="Filter">
             <div
               className={cn(
@@ -65,10 +74,15 @@ export default function Control({ tabname, button }: ControlProps) {
               </Button>
 
               <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="border-none !w-25">
+                <SelectTrigger className="border-none !w-35">
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
-                <SelectContent className="!border-none bg-white">
+                <SelectContent
+                  className={cn(
+                    "border border-[var(--color-dark)] bg-[var(--color-light)]",
+                    "!shadow-[var(--shadow-brutalism-xs)] !left-0",
+                  )}
+                >
                   {FILTER_MENU.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
@@ -91,10 +105,15 @@ export default function Control({ tabname, button }: ControlProps) {
               </Button>
 
               <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="border-none !w-35">
+                <SelectTrigger className="border-none !w-40">
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
-                <SelectContent className="!border-none bg-white">
+                <SelectContent
+                  className={cn(
+                    "border border-[var(--color-dark)] bg-[var(--color-light)]",
+                    "!shadow-[var(--shadow-brutalism-xs)]",
+                  )}
+                >
                   {SORT_OPTIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
@@ -117,10 +136,15 @@ export default function Control({ tabname, button }: ControlProps) {
               </Button>
 
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="border-none !w-30">
+                <SelectTrigger className="border-none !w-35">
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
-                <SelectContent className="!border-none bg-white">
+                <SelectContent
+                  className={cn(
+                    "border border-[var(--color-dark)] bg-[var(--color-light)]",
+                    "!shadow-[var(--shadow-brutalism-xs)] !left-0",
+                  )}
+                >
                   {STATUS_OPTIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
@@ -131,8 +155,8 @@ export default function Control({ tabname, button }: ControlProps) {
             </div>
           </Optional>
         </div>
-        <div className="flex items-center gap-[10px]">
-          <div className={cn("relative hidden md:block", styles.inputSearch)}>
+        <div className="md:flex items-center gap-[10px] mt-5 md:mt-0 space-y-5 md:space-y-0">
+          <div className={cn("relative", styles.inputSearch)}>
             <MagnifyingGlassIcon
               size={17}
               weight="bold"
@@ -141,7 +165,7 @@ export default function Control({ tabname, button }: ControlProps) {
             <Input
               type="search"
               placeholder=" Search..."
-              className=" pl-9 w-[240px] !h-[40px] bg-[var(--color-light)] border-none"
+              className=" pl-9 w-full md:w-[240px] !h-[40px] bg-[var(--color-light)] border-none"
             />
           </div>
 
