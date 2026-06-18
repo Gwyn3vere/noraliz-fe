@@ -251,27 +251,51 @@ function Canvas() {
 
         <Interaction position="top-2 left-[40px]">
           {/* Undo - Redo */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              "shadow-[var(--shadow-brutalism-xs)]",
+              styles.canvasButtonBorder,
+            )}
+          >
             <ArrowUUpLeftIcon size={20} weight="bold" />
           </Button>
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              "shadow-[var(--shadow-brutalism-xs)]",
+              styles.canvasButtonBorder,
+            )}
+          >
             <ArrowUUpRightIcon size={20} weight="bold" />
           </Button>
 
           {/*Project name input */}
-          <div className={"relative"}>
+          <div className={cn("relative")}>
             <FolderOpenIcon size={20} weight="fill" className={styles.canvasProjectIcon} />
             <Input
               type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className={cn(styles.canvasProjectInput, styles.canvasButtonShadow)}
+              className={cn(
+                styles.canvasProjectInput,
+                "shadow-[var(--shadow-brutalism-xs)]",
+                styles.canvasButtonBorder,
+              )}
             />
           </div>
 
           {/* Preview */}
           <Button
-            className={cn("!w-[170px]", styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}
+            className={cn(
+              "!w-[170px]",
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              "shadow-[var(--shadow-brutalism-xs)]",
+              styles.canvasButtonBorder,
+            )}
             onClick={handlePreview}
           >
             <ArrowSquareOutIcon size={20} weight="fill" />
@@ -283,24 +307,48 @@ function Canvas() {
           {/* Save - Publish */}
           <Button
             onClick={performSave}
-            className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
           >
             <UploadIcon size={20} weight="fill" />
           </Button>
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
+          >
             <BookOpenTextIcon size={20} weight="fill" />
           </Button>
 
           {/* Export */}
           <Button
-            className={cn(styles.canvasButton, styles.canvasButtonExport, styles.canvasButtonShadow)}
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonExport,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
             onClick={handleExport}
           >
             <span className={cn(styles.canvasText, "text-white")}>Export project</span>
           </Button>
 
           {/* Tooltip */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
+          >
             <WrenchIcon size={20} weight="fill" />
           </Button>
         </Interaction>
@@ -311,7 +359,15 @@ function Canvas() {
 
         <Interaction position="bottom-2 left-1/2 -translate-x-1/2">
           {/* View mode */}
-          <div className={cn(styles.canvasButton, styles.canvasViewMode, styles.canvasButtonShadow, "overflow-hidden")}>
+          <div
+            className={cn(
+              styles.canvasButton,
+              styles.canvasViewMode,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+              "overflow-hidden",
+            )}
+          >
             <Button
               className={cn(
                 styles.canvasButton,
@@ -350,12 +406,19 @@ function Canvas() {
 
         <Interaction position="bottom-2 right-[40px]">
           {/* Layer */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
+          >
             <StackIcon size={20} weight="fill" />
           </Button>
 
           {/* Zoom bar */}
-          <div className={cn(styles.canvasZoombar, styles.canvasButtonShadow)}>
+          <div className={cn(styles.canvasZoombar, styles.canvasButtonBorder, "shadow-[var(--shadow-brutalism-xs)]")}>
             <Button
               onClick={handleZoomOut}
               className={cn(styles.canvasButton, styles.canvasButtonHover, "!shadow-none")}
@@ -374,12 +437,24 @@ function Canvas() {
           </div>
 
           {/* Fit - Fullscreen */}
-          <Button className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}>
+          <Button
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
+          >
             <ArrowsOutIcon size={20} weight="fill" />
           </Button>
           <Button
             onClick={handleFit}
-            className={cn(styles.canvasButton, styles.canvasButtonHover, styles.canvasButtonShadow)}
+            className={cn(
+              styles.canvasButton,
+              styles.canvasButtonHover,
+              styles.canvasButtonBorder,
+              "shadow-[var(--shadow-brutalism-xs)]",
+            )}
           >
             <span className={styles.canvasText}>Fit</span>
           </Button>
