@@ -12,12 +12,20 @@ import Control from "./Control";
 import { useProjects } from "@/components/hooks/useProjects";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useNavigate, Link } from "react-router-dom";
+import InlineLoader from "../Loading/InlineLoader";
 
 export default function Projects() {
-  const { projects, error, removeProject, createNewProject } = useProjects();
+  const { projects, isLoading, error, removeProject, createNewProject } = useProjects();
   const navigate = useNavigate();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const latestProject =
+    projects.length > 0
+      ? projects.reduce((latest, current) =>
+          new Date(current.updatedAt) > new Date(latest.updatedAt) ? current : latest,
+        )
+      : null;
 
   const handleCreateProject = async () => {
     const newProject = await createNewProject("Untitled Project");
@@ -43,6 +51,10 @@ export default function Projects() {
     );
   }
 
+  if (isLoading) {
+    return <InlineLoader tab="projects" />;
+  }
+
   return projects?.length === 0 ? (
     <EmptySpace
       icon={images.emptyProjects}
@@ -58,11 +70,13 @@ export default function Projects() {
   ) : (
     <>
       <div className={styles.contentContainer}>
-        <div className="pt-[40px] pb-[20px] md:py-[40px]">
+        <div className="py-[20px] md:py-[40px]">
           <Control
             tabname="Projects"
+            total={projects?.length}
+            editedTime={formatEditedTime(latestProject.updatedAt)}
             button={
-              <Button className={styles.emptyButton} onClick={handleCreateProject}>
+              <Button className={cn(styles.emptyButton, "w-full")} onClick={handleCreateProject}>
                 <CirclePlus strokeWidth={3} />
                 Create new project
               </Button>

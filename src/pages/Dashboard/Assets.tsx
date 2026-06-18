@@ -10,6 +10,7 @@ import type { AssetSummary } from "@/types";
 import Control from "./Control";
 import { Ring } from "ldrs/react";
 import "ldrs/react/Ring.css";
+import { cn } from "@/lib/utils";
 
 export default function Assets() {
   const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
@@ -36,10 +37,11 @@ export default function Assets() {
     />
   ) : (
     <div className={styles.contentContainer}>
-      <div className="pt-[40px] pb-[20px] md:py-[40px]">
+      <div className="py-[20px] md:py-[40px]">
         <Control
+          tabname="Assets"
           button={
-            <Button className={styles.emptyButton}>
+            <Button className={cn(styles.emptyButton, "w-full")}>
               <CloudUpload strokeWidth={3} />
               Upload your assets
             </Button>

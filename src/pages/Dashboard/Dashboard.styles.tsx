@@ -20,7 +20,7 @@ const wrapperLayout = "flex items-center justify-center";
 const wrapperSize = "min-h-screen";
 
 // empty
-const emptyBase = "bg-[var(--color-light)] rounded-[30px] mx-[15px]";
+const emptyBase = "bg-[var(--color-light)] rounded-[10px] mx-[15px]";
 const emptySize = " w-[1080px] h-[420px]";
 const emptyLayout = "flex flex-col items-center justify-center gap-5";
 
@@ -31,7 +31,7 @@ const emptyButtonBase =
   "text-white text-[13px] md:text-[15px] bg-[var(--color-primary)] !rounded-[10px] cursor-pointer";
 
 // content
-const contentSpace = "mt-[160px]";
+const contentSpace = "mt-[120px] md:mt-[140px]";
 
 // card
 const cardBase = "bg-[var(--color-light)] rounded-[10px]";
@@ -43,14 +43,13 @@ const cardThumbBase = "bg-[var(--color-dark)]/5";
 const cardThumbSize = "w-full h-[200px]";
 
 // asset
-const assetBase = "bg-[var(--color-light)] shadow-[var(--shadow-sm)] rounded-[30px] overflow-hidden";
+const assetBase = "bg-[var(--color-light)] shadow-[var(--shadow-brutalism-xs)] rounded-[10px] overflow-hidden";
 const assetPosition = "relative";
 
 const assetHover = "bg-[var(--color-dark)]/40 opacity-0 group-hover:opacity-100 cursor-pointer";
 
 // img
-const imgBase = "border-5 md:border-10 border-[var(--color-light)] !rounded-[30px]";
-const imgSize = "w-[130px] h-[130px] lg:w-[200px] lg:h-[200px]";
+const imgSize = "w-[180px] h-[180px] lg:w-[200px] lg:h-[200px]";
 const imgLayout = "flex items-center justify-center";
 
 const imgCopy = "bg-[var(--color-dark)]/40 cursor-pointer text-white";
@@ -71,7 +70,7 @@ export const dashboardStyles = {
   tabContent: cn(tabTextBase),
 
   wrapper: cn(wrapperLayout, wrapperSize),
-  empty: cn(emptyBase, emptyLayout, emptySize),
+  empty: cn(emptyBase, emptyLayout, emptySize, "border border-[var(--color-dark)]", "shadow-[var(--shadow-brutalism)]"),
   emptyText: cn(emptyTextBase, emptyTextLayout),
   emptyButton: cn(emptyButtonBase, cardBorder, cardShadow),
 
@@ -91,10 +90,10 @@ export const dashboardStyles = {
   ),
 
   assetContainer: cn(assetBase, assetPosition),
-  assetCopy: cn(imgCopy, imgLoading, imgBase, imgLayout, imgTrans),
-  assetSee: cn("!text-xl", assetHover, imgSize, imgBase, imgLoading, imgTrans),
+  assetCopy: cn(imgCopy, imgLoading, imgLayout, imgTrans),
+  assetSee: cn("!text-xl", assetHover, imgSize, imgLoading, imgTrans),
 
-  images: cn(imgBase, imgSize, imgLayout),
+  images: cn(imgSize, imgLayout),
   loading: cn(imgLoading),
 
   meta: cn(metaBase, metaLayout),
