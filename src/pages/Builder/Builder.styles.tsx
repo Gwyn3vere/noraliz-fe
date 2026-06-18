@@ -2,7 +2,12 @@ import { cn } from "@/lib/utils";
 
 export const builderStyles = {
   // Left Panel component
-  lPanelContainer: cn("relative z-40", "flex flex-col", "w-[260px] h-full bg-[var(--color-light)]"),
+  lPanelContainer: cn(
+    "relative z-40",
+    "flex flex-col",
+    "w-[260px] h-screen",
+    "bg-[var(--color-light)] shadow-[var(--shadow-xs)]",
+  ),
   lPanelLogoBlock: cn("h-[100px] px-[20px] border-b border-[var(--color-dark)]/10"),
   lPanelLogoLayout: cn("flex items-center gap-2.5 pt-[20px]"),
   lPanelLogo: cn("w-[50px] h-[50px] rounded-[10px] bg-[var(--color-primary)]"),
@@ -65,13 +70,10 @@ export const builderStyles = {
   // Canvas component
   canvasInteraction: cn("absolute flex items-center gap-2.5"),
   canvasProjectIcon: cn("absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-primary)]"),
-  canvasProjectInput: cn(
-    "pl-[40px] !text-[13px] font-semibold !border-none",
-    "bg-[var(--color-light)] !w-[260px] !h-[40px]",
-  ),
+  canvasProjectInput: cn("pl-[40px] !text-[13px] font-semibold", "bg-[var(--color-light)] !w-[260px] !h-[40px]"),
   canvasButton: cn("w-[40px] h-[40px] !rounded-[10px] bg-[var(--color-light)] "),
   canvasButtonShadow: cn("shadow-[var(--shadow-xs)]"),
-  canvasButtonBorder: cn("!border-2 !border-[var(--color-dark)]"),
+  canvasButtonBorder: cn("!border !border-[var(--color-dark)]"),
   canvasButtonExport: cn("!w-[120px] !bg-[var(--color-primary)]"),
   canvasButtonHover: cn("hover:bg-[var(--color-primary)] hover:!text-white"),
   canvasButtonView: cn("shadow-none"),

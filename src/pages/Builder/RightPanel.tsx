@@ -86,8 +86,8 @@ export default function RighPanel() {
   const canRemove = selectionType === "block" || selectionType === "column";
 
   return (
-    <div className=" h-screen overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <aside className={cn("relative", styles.lPanelContainer, styles.canvasButtonShadow)}>
+    <div className="relative z-1">
+      <aside className={cn(styles.lPanelContainer)}>
         <div className="p-[20px] border-b border-[var(--color-dark)]/10">
           <div className="flex items-center gap-[5px]">
             <CirclesFourIcon size={20} weight="fill" />
@@ -180,21 +180,6 @@ export default function RighPanel() {
           </div>
         ) : (
           <>
-            <div
-              className={cn(
-                "absolute z-40 top-0 right-0 w-[252px] h-full rounded-[10px]",
-                "bg-[var(--color-light)]/50",
-              )}
-            >
-              <div className="w-full h-full flex flex-col items-center justify-center gap-[10px]">
-                <div className="w-[30px] h-[30px] flex items-center justify-center rounded-full bg-[var(--color-primary)]/20">
-                  <SlidersIcon size={20} weight="fill" className="text-[var(--color-primary)]" />
-                </div>
-                <div className="text-[14px] text-[var(--color-dark)]/70 w-[180px] text-center">
-                  Select an element to edit its properties.
-                </div>
-              </div>
-            </div>
             {["Content", "Typography", "Spacing", "Size", "Position", "Background", "Border", "Effects"].map(
               (title) => (
                 <div key={title} className="border-b border-[var(--color-dark)]/10 p-[20px] flex items-center gap-2">
@@ -206,6 +191,19 @@ export default function RighPanel() {
           </>
         )}
       </aside>
+
+      {!selectionType && (
+        <aside className={cn("absolute z-40 top-0 right-0 w-[260px] h-screen", "bg-[var(--color-light)]/50")}>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-[10px]">
+            <div className="w-[30px] h-[30px] flex items-center justify-center rounded-full bg-[var(--color-primary)]/20">
+              <SlidersIcon size={20} weight="fill" className="text-[var(--color-primary)]" />
+            </div>
+            <div className="text-[14px] text-[var(--color-dark)]/70 w-[180px] text-center">
+              Select an element to edit its properties.
+            </div>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

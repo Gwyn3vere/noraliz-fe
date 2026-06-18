@@ -36,6 +36,7 @@ function Property({ title, children, defaultOpen = false }: PropertiesProps) {
       <div
         className={cn(
           styles.dropdownContainer,
+          "overflow-hidden",
           dropdown ? "max-h-[1000px] opacity-100 mt-[11px]" : "max-h-0 opacity-0",
         )}
       >
