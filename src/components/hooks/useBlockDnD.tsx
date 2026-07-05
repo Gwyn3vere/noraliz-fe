@@ -10,7 +10,7 @@ interface UseBlockDnDProps {
   primitiveBlocks: PrimitiveBlock[];
 }
 
-// ─── Helpers: tính order từ pointer ───────────────────────────────────────────
+// Helper: tính order từ pointer
 
 function getBlockOrderFromPointer(sectionId: string, clientX: number, clientY: number): number {
   const blockElements = document.querySelectorAll(`[data-section-id="${sectionId}"] [data-block-id]`);
@@ -75,7 +75,7 @@ function getSectionOrderFromPointer(pageId: string, clientY: number): number {
   return sectionsArray.length;
 }
 
-// ─── Helper: tính drop point từ event ────────────────────────────────────────
+// Helper: tính drop point từ event
 
 function getDropPoint(event: DragEndEvent): { dropX: number; dropY: number } {
   const activatorX = (event.activatorEvent as MouseEvent)?.clientX ?? 0;
@@ -86,7 +86,7 @@ function getDropPoint(event: DragEndEvent): { dropX: number; dropY: number } {
   };
 }
 
-// ─── Helper: tạo block mới ────────────────────────────────────────────────────
+// Helper: tạo block mới
 
 function buildBlock(blockType: string, order: number, defaultProps: Record<string, unknown>): Block {
   const rawStyles = (defaultProps as any).styles ?? {};
@@ -127,8 +127,6 @@ function buildBlock(blockType: string, order: number, defaultProps: Record<strin
 
   return base as unknown as Block;
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useBlockDnD({ primitiveBlocks }: UseBlockDnDProps) {
   const [activeDragItem, setActiveDragItem] = useState<string | null>(null);

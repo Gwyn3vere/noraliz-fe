@@ -1,19 +1,24 @@
-import { useNavigate } from "react-router-dom";
+import Navbar from "./Navbar";
+import Hero from "./Hero";
+import Features from "./Features";
+import Components from "./Components";
+import Templates from "./Templates";
+import Workflow from "./Workflow";
+import Builders from "./Builders";
+import Footer from "./Footer";
 
 function LandingPage() {
-  const navigate = useNavigate();
-  setTimeout(() => {
-    navigate("/login");
-  }, 3000);
   return (
-    <div className="flex flex-col items-center justify-center h-screen space-y-4">
-      <span className="font-display uppercase font-black text-[70px]">Noraliz</span>
-
-      <div className="flex flex-col items-center justify-center">
-        <p>Our public website is currently being built.</p>
-        <p>You'll be redirected to the application in a few seconds.</p>
-      </div>
-    </div>
+    <main className="min-h-screen">
+      <Navbar />
+      <Hero />
+      <Features />
+      <Components />
+      <Templates />
+      <Workflow />
+      <Builders />
+      <Footer />
+    </main>
   );
 }
 

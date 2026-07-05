@@ -89,7 +89,7 @@ export const dashboardStyles = {
     cardShadow,
   ),
 
-  assetContainer: cn(assetBase, assetPosition),
+  assetContainer: cn(assetBase, assetPosition, "border border-[var(--color-dark)] overflow-hidden"),
   assetCopy: cn(imgCopy, imgLoading, imgLayout, imgTrans),
   assetSee: cn("!text-xl", assetHover, imgSize, imgLoading, imgTrans),
 
