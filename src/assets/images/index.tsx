@@ -28,8 +28,6 @@ import cpnImage from "./Image.svg";
 import cpnColumn from "./Columns.svg";
 import cpnSpacer from "./Spacer.svg";
 
-// SVG file image
-
 export const images = {
   txVertical,
 
