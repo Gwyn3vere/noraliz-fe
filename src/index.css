@@ -1,12 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Antonio:wght@100..700&family=Caveat+Brush&display=swap");
 @import "tailwindcss";
 @import "./assets/fonts/switzer.css";
 @import "./assets/fonts/clash-display.css";
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
+@import "./assets//fonts/general-sans.css";
 
 @theme {
   --font-sans: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-general: "General", ui-sans-serif, system-ui, sans-serif;
   --font-display: "ClashDisplay", ui-sans-serif, system-ui, sans-serif;
-  --font-bebas: "Bebas Neue", sans-serif;
+  --font-antonio: "Antonio", sans-serif;
+  --font-caveat: "Caveat Brush", cursive;
 }
 
 :root {
@@ -16,7 +19,7 @@
   --color-error: #de3a3a;
   --color-success: #4285f4;
 
-  --color-body-light: rgba(255, 255, 255, 0.95);
+  --color-body-light: #f5f5f5;
   --color-body-dark: rgba(47, 47, 47, 0.95);
 
   --color-gradient-auth: 45deg, rgba(47, 47, 47, 1) 12%, rgba(47, 47, 47, 0.8) 100%;
@@ -26,17 +29,15 @@
   --shadow-xs: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 
   --shadow-brutalism-xs: 4px 4px 0px 0px var(--color-dark);
-  --shadow-brutalism: 6px 6px 0px 0px var(--color-dark);
-}
-
-html {
-  background: var(--color-dark);
+  --shadow-brutalism: 6px 8px 0px 0px var(--color-dark);
+  --shadow-brutalism-lg: 8px 10px 0px 0px var(--color-dark);
 }
 
 body {
   background: var(--color-body-light);
   font-family: "Switzer", sans-serif;
   color: var(--color-dark);
+  scroll-behavior: smooth;
 }
 
 .hover-scrollbar::-webkit-scrollbar {
@@ -82,4 +83,44 @@ body {
 
 .react-colorful__hue {
   height: 10px !important;
+}
+
+/* Landing page */
+.hero-text-shadow {
+  text-shadow:
+    1px 1px 0 #000,
+    2px 2px 0 #000,
+    3px 3px 0 #000,
+    4px 4px 0 #000,
+    5px 5px 0 #000,
+    6px 6px 0 #000,
+    7px 7px 0 #000,
+    8px 8px 0 #000,
+    9px 9px 0 #000,
+    10px 10px 0 #000,
+    11px 11px 0 #000,
+    12px 12px 0 #000,
+    13px 13px 0 #000,
+    14px 14px 0 #000,
+    15px 15px 0 #000,
+    16px 16px 0 #000,
+    17px 17px 0 #000,
+    18px 18px 0 #000,
+    19px 19px 0 #000,
+    20px 20px 0 #000;
+}
+
+.animate-sparkle {
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(0.5);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
 }

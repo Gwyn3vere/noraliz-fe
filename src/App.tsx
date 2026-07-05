@@ -3,6 +3,7 @@ import { routes } from "../src/routers";
 import { useAuthLoader } from "@/components/hooks/useAuthLoader";
 import { useEffect } from "react";
 import { initializeAuth } from "./services/api";
+import { lenis } from "./utils/lenis";
 
 function AppRoutes() {
   return useRoutes(routes);
@@ -21,6 +22,14 @@ function AppContent() {
 function App() {
   useEffect(() => {
     initializeAuth();
+  }, []);
+  useEffect(() => {
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
   }, []);
   return (
     <BrowserRouter>
