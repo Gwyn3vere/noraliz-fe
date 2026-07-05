@@ -84,7 +84,7 @@ function FeatureCard({ serial, title, shortDesc, link }: FeatureCardProps) {
       <h3 className={cn("font-bold text-[25px] uppercase max-w-[200px] h-[75px] mb-[30px]")}>{title}</h3>
       <p className={cn("font-medium text-[16px] max-w-[230px]")}>{shortDesc}</p>
       <Link
-        to={link}
+        to={link ?? "/"}
         className={cn(
           "group inline-flex items-center gap-5",
           "text-[16px] font-medium text-[var(--color-primary)]",

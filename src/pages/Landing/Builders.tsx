@@ -154,7 +154,7 @@ function BuildersCard({ thumbnail, position, bullist }: BuildersCardProps) {
 
             <div className={cn("mt-2")}>
               <ul className="font-caveat text-[20px] list-disc pl-5">
-                {bullist?.list.map((item, index) => (
+                {bullist?.list?.map((item, index) => (
                   <li key={index} className="text-nowrap">
                     {item}
                   </li>
@@ -166,7 +166,7 @@ function BuildersCard({ thumbnail, position, bullist }: BuildersCardProps) {
               src={images.doodleArrow4}
               alt="doodle arrow"
               className="absolute w-20 h-20"
-              style={{ left: bullist.doodle?.x, top: bullist.doodle?.y, transform: bullist.doodle?.rotation }}
+              style={{ left: bullist?.doodle?.x, top: bullist?.doodle?.y, transform: bullist?.doodle?.rotation }}
             />
           </div>
         </div>
