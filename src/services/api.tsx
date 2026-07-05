@@ -75,7 +75,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         const currentPath = window.location.pathname;
-        const authPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+        const authPaths = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
         if (!authPaths.includes(currentPath)) {
           useAuthStore.getState().clearAuth();
           window.location.href = "/login";
