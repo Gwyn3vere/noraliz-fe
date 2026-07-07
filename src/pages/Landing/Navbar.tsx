@@ -117,7 +117,7 @@ function Navbar({ auth }: { auth: boolean }) {
         ) : (
           <div ref={dropdownRef} className="relative order-3 ml-auto ">
             <Button onClick={handleDropdown} className={cn("!rounded-full", "uppercase !font-bold", styles.navButton)}>
-              {user.fullName[0]}
+              {user?.fullName[0]}
             </Button>
 
             <div
