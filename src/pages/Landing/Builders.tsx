@@ -60,7 +60,7 @@ const BUILDERS = [
 
 function Builder() {
   return (
-    <section className={cn("max-w-[1420px] px-2.5 md:mx-auto mt-50", "relative flex h-[900px]")}>
+    <section id="builders" className={cn("max-w-[1420px] px-2.5 md:mx-auto mt-50", "relative flex h-[900px]")}>
       {/* Heading title */}{" "}
       <div className="space-y-5 relative">
         <motion.div

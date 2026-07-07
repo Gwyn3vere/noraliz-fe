@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { images } from "@/assets/images";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { cardStackVariant } from "@/motions/cardStackMotion";
 import { heroTextVariant } from "@/motions/heroTextMotion";
 import { ctaVariant, ctaButtonVariant } from "@/motions/heroCTAMotion";
@@ -54,7 +54,7 @@ const CARD_TRANSFORMS = [
   { rotate: 10, y: 40, initialY: 400, delay: 13 },
 ];
 
-function Hero() {
+function Hero({ auth }: { auth: boolean }) {
   return (
     <section
       className={cn(
@@ -191,17 +191,18 @@ function Hero() {
         </motion.div>
 
         <motion.div variants={ctaButtonVariant} initial="hidden" animate="visible">
-          <Button
+          <Link
+            to={auth ? "/dashboard" : "/login"}
             className={cn(
-              "w-auto h-[50px] px-6",
+              "w-auto h-[50px] px-6 py-3",
               "bg-[var(--color-primary)] !rounded-full",
               "border border-[var(--color-dark)]",
               "shadow-[var(--shadow-brutalism-xs)]",
               "text-[var(--color-light)] text-[16px] !font-bold",
             )}
           >
-            Get Started
-          </Button>
+            {auth ? "Dashboard" : "Get Started"}
+          </Link>
         </motion.div>
 
         <motion.img
