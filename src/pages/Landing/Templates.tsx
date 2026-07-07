@@ -14,7 +14,7 @@ import {
 
 function Templates() {
   return (
-    <section className={cn("relative max-w-[1420px] px-2.5 py-[50px] md:mx-auto mt-50")}>
+    <section id="templates" className={cn("relative max-w-[1420px] px-2.5 py-[50px] md:mx-auto mt-50")}>
       <div className={cn("flex items-center justify-center gap-7")}>
         <motion.div
           variants={templateLeftVariants}

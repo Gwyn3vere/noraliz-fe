@@ -28,7 +28,7 @@ function Components() {
   const secondRow = COMPONENTS.slice(2);
 
   return (
-    <section className={cn("relative max-w-[1420px] px-2.5 py-[50px] md:mx-auto ")}>
+    <section id="components" className={cn("relative max-w-[1420px] px-2.5 py-[50px] md:mx-auto ")}>
       {/* Head title CTA */}
       <div className="absolute w-full flex justify-between">
         <div className="space-y-5">

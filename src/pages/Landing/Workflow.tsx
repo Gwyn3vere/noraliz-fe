@@ -38,6 +38,7 @@ const WORKFLOW = [
 function Workflow() {
   return (
     <section
+      id="workflow"
       className={cn(
         "relative max-w-[1420px] px-2.5 py-[50px] md:mx-auto mt-50",
         "flex flex-col items-center justify-center gap-10",

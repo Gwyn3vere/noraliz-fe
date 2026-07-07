@@ -27,6 +27,13 @@ function Navbar({ auth }: { auth: boolean }) {
     await logout();
     navigate("/");
   };
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -86,7 +93,7 @@ function Navbar({ auth }: { auth: boolean }) {
 
             <div className={cn("mt-5 lg:mt-0 flex flex-col lg:flex-row gap-2 lg:gap-[20px]")}>
               {NAV_MENU_LDP.map((nav) => (
-                <Link to={nav.sectionId} key={nav.id}>
+                <Link to={nav.sectionId} key={nav.id} onClick={(e) => handleNavClick(e, nav.sectionId)}>
                   <div className={cn(styles.navMenu)}>{nav.title}</div>
                 </Link>
               ))}
