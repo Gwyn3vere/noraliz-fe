@@ -49,10 +49,6 @@ function Navbar({ auth }: { auth: boolean }) {
     };
   }, []);
 
-  if (isLoading) {
-    return <div className="h-16 bg-transparent" />;
-  }
-
   return (
     <section className={cn("fixed inset-0 z-50 h-[60px] ", "bg-[var(--color-body-light)]")}>
       <div className={cn("max-w-[1420px] h-full px-2.5 md:mx-auto", "flex items-center lg:grid grid-cols-3")}>
@@ -117,7 +113,7 @@ function Navbar({ auth }: { auth: boolean }) {
         ) : (
           <div ref={dropdownRef} className="relative order-3 ml-auto ">
             <Button onClick={handleDropdown} className={cn("!rounded-full", "uppercase !font-bold", styles.navButton)}>
-              {user?.fullName[0]}
+              {isLoading ? "L" : user?.fullName[0]}
             </Button>
 
             <div

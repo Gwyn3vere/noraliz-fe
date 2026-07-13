@@ -26,4 +26,14 @@ export const landingStyles = {
 
     "transition-ease duration-200",
   ),
+  ctaButton: cn(
+    "w-auto h-[50px] px-6 py-3",
+    "bg-[var(--color-primary)] !rounded-full",
+    "border border-[var(--color-dark)]",
+    "shadow-[var(--shadow-brutalism-xs)]",
+    "hover:shadow-[var(--shadow-brutalism-xl)]",
+    "hover:bg-[var(--color-primary-hover)]",
+    "text-[var(--color-light)] text-[16px] !font-bold",
+    "transition-all",
+  ),
 };

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { landingStyles as styles } from "./Landing.styles";
 import { images } from "@/assets/images";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -191,16 +192,7 @@ function Hero({ auth }: { auth: boolean }) {
         </motion.div>
 
         <motion.div variants={ctaButtonVariant} initial="hidden" animate="visible">
-          <Link
-            to={auth ? "/dashboard" : "/login"}
-            className={cn(
-              "w-auto h-[50px] px-6 py-3",
-              "bg-[var(--color-primary)] !rounded-full",
-              "border border-[var(--color-dark)]",
-              "shadow-[var(--shadow-brutalism-xs)]",
-              "text-[var(--color-light)] text-[16px] !font-bold",
-            )}
-          >
+          <Link to={auth ? "/dashboard" : "/login"} className={cn(styles.ctaButton)}>
             {auth ? "Dashboard" : "Get Started"}
           </Link>
         </motion.div>

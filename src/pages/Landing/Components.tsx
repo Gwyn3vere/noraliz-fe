@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { landingStyles as styles } from "./Landing.styles";
 import { Link } from "react-router-dom";
 import { images } from "@/assets/images";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
@@ -55,18 +56,7 @@ function Components() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={ctaVariants}>
-            <Link
-              to=""
-              className={cn(
-                "relative z-10",
-                "inline-flex items-center gap-2",
-                "h-[40px] py-[10px] px-[20px] rounded-full",
-                "border border-[var(--color-dark)]",
-                "text-[16px] text-[var(--color-light)] font-bold",
-                "bg-[var(--color-primary)]",
-                "shadow-[var(--shadow-brutalism)]",
-              )}
-            >
+            <Link to="" className={cn("relative z-10", "inline-flex items-center gap-2", styles.ctaButton)}>
               Explore all components
               <ArrowUpRightIcon size={20} weight="bold" />
               <motion.img

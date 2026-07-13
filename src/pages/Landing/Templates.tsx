@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { landingStyles as styles } from "./Landing.styles";
 import { Link } from "react-router-dom";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import { images } from "@/assets/images";
@@ -127,18 +128,7 @@ function Templates() {
             />
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={ctaVariants}>
-            <Link
-              to=""
-              className={cn(
-                "relative mt-2",
-                "inline-flex items-center gap-2",
-                "h-[40px] py-[10px] px-[20px] rounded-full",
-                "border border-[var(--color-dark)]",
-                "text-[16px] text-[var(--color-light)] font-bold",
-                "bg-[var(--color-primary)]",
-                "shadow-[var(--shadow-brutalism)]",
-              )}
-            >
+            <Link to="" className={cn("relative mt-2", "inline-flex items-center gap-2", styles.ctaButton)}>
               Explore the library
               <ArrowRightIcon size={20} />
             </Link>
