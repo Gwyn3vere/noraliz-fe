@@ -14,6 +14,7 @@
 
 :root {
   --color-primary: #ff6a00;
+  --color-primary-hover: #ff8c00;
   --color-light: #ffffff;
   --color-dark: #2f2f2f;
   --color-error: #de3a3a;
@@ -31,6 +32,7 @@
   --shadow-brutalism-xs: 4px 4px 0px 0px var(--color-dark);
   --shadow-brutalism: 6px 8px 0px 0px var(--color-dark);
   --shadow-brutalism-lg: 8px 10px 0px 0px var(--color-dark);
+  --shadow-brutalism-xl: 10px 12px 0px 0px var(--color-dark);
 }
 
 body {

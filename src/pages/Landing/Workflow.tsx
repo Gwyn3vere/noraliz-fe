@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { landingStyles as styles } from "./Landing.styles";
 import { Link } from "react-router-dom";
 import { images } from "@/assets/images";
 // import { motion } from "framer-motion";
@@ -77,18 +78,7 @@ function Workflow() {
       </div>
 
       <div className="relative">
-        <Link
-          to=""
-          className={cn(
-            "relative z-10",
-            "inline-flex items-center gap-2",
-            "h-[40px] py-[10px] px-[20px] rounded-full",
-            "border border-[var(--color-dark)]",
-            "text-[16px] text-[var(--color-light)] font-bold",
-            "bg-[var(--color-primary)]",
-            "shadow-[var(--shadow-brutalism)]",
-          )}
-        >
+        <Link to="" className={cn("relative z-10", "inline-flex items-center gap-2", styles.ctaButton)}>
           Try Noraliz now
         </Link>
         <img src={images.Sparkle} alt="sparkle" className={cn("absolute -right-10 -top-3 w-5 h-5")} />
@@ -124,9 +114,10 @@ function WorkflowItem({ serial, title, desc, position, doodle }: WorkflowItemPro
       <div className="relative">
         <div
           className={cn(
-            "text-[25px] border border-[var(--color-dark)] rounded-[10px]",
+            "text-[25px] border-2 border-[var(--color-dark)] rounded-[10px]",
             "flex items-center justify-center w-[50px] h-[50px] text-white font-bold",
             "bg-[var(--color-primary)] font-antonio",
+            "shadow-[var(--shadow-brutalism-xs)]",
           )}
         >
           0{serial}
