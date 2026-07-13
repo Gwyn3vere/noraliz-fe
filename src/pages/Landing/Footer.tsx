@@ -118,7 +118,7 @@ function List({ title, list }: ListMenuProps) {
     <div className="flex-1 space-y-2">
       <div className="uppercase font-bold">{title}</div>
 
-      {list.map((item) => {
+      {list?.map((item) => {
         return (
           <div key={item.id} className={cn("font-medium text-[14px] text-[var(--color-light)]/50")}>
             {item.name}
