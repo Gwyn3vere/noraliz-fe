@@ -57,15 +57,17 @@ export function useCanvasInteraction(initialZoom = 100, disabled?: boolean) {
     if (!canvas) return;
 
     const handleWheel = (e: WheelEvent) => {
+      if (!canvas.contains(e.target as Node)) {
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey) {
-        // Zoom
         e.preventDefault();
         setZoom((prev) => {
           const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
           return Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM);
         });
       } else {
-        // Pan dọc
         e.preventDefault();
         setPanOffset((prev) => ({
           x: prev.x,

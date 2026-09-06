@@ -5,7 +5,7 @@ export const builderStyles = {
   lPanelContainer: cn(
     "relative z-40",
     "flex flex-col",
-    "w-[260px] h-screen min-h-0",
+    "w-[260px] h-screen",
     "bg-[var(--color-light)] shadow-[var(--shadow-xs)]",
   ),
   lPanelLogoBlock: cn("h-[100px] px-[20px] border-b border-[var(--color-dark)]/10"),

@@ -52,7 +52,7 @@ export default function Builder() {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex overflow-hidden">
+      <div className="flex h-screen overflow-hidden">
         <LeftPanel />
         <Canvas />
         <RighPanel />
