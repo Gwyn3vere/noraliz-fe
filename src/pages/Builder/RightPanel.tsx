@@ -98,7 +98,7 @@ export default function RighPanel() {
         {selectionType ? (
           <div
             spellCheck={false}
-            className="flex-1 overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="flex-1 min-h-0 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             <Property title="Content" defaultOpen>
               <Content
